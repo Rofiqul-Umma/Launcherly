@@ -47,10 +47,10 @@ class HomeViewModel @Inject constructor(
                 emit(HomeErrorFetchAppsState(e.message ?: "Error fetching apps"))
             }
         }
-}
+    }
 
-override fun onCleared() {
-    super.onCleared()
-    viewModelScope.coroutineContext.cancel()
-}
+    override fun onCleared() {
+        super.onCleared()
+        viewModelScope.coroutineContext.cancel()
+    }
 }

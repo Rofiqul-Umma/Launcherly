@@ -73,6 +73,7 @@ import com.rofiq.launcherly.features.get_account_info.view_model.GetAccountInfoE
 import com.rofiq.launcherly.features.get_account_info.view_model.GetAccountInfoError
 import com.rofiq.launcherly.features.get_account_info.view_model.GetAccountInfoSuccess
 import com.rofiq.launcherly.features.get_account_info.view_model.GetAccountInfoViewModel
+import com.rofiq.launcherly.features.home.view.component.ListApps
 import com.rofiq.launcherly.features.home.view_model.HomeErrorFetchAppsState
 import com.rofiq.launcherly.features.home.view_model.HomeLoadedFetchAppState
 import com.rofiq.launcherly.features.home.view_model.HomeLoadingFetchAppsState
@@ -85,31 +86,24 @@ import com.rofiq.launcherly.features.launch_app.view_model.LaunchAppViewModel
 @OptIn(UnstableApi::class)
 @Composable
 fun HomePage(
-    homeVM: HomeViewModel = hiltViewModel(),
     dateTimeVM: FetchDateTimeViewModel = hiltViewModel(),
     getAccountInfoVM: GetAccountInfoViewModel = hiltViewModel(),
     checkInternetVM: CheckInternetViewModel = hiltViewModel(),
-    launchAppVM: LaunchAppViewModel = hiltViewModel()
 ) {
 
-    val homeState = homeVM.homeState.collectAsState()
+
     val fetchDateTimeState = dateTimeVM.fetchDateTimeState.collectAsState()
     val getAccountInfoState = getAccountInfoVM.getAccountInfoState.collectAsState()
     val checkInternetState = checkInternetVM.checkInternetState.collectAsState()
-    val launchAppState = launchAppVM.launchAppState.collectAsState()
 
     val settingsFocusRequester = remember { FocusRequester() }
     val profileFocusRequester = remember { FocusRequester() }
     val wifiFocusRequester = remember { FocusRequester() }
 
-    val firstAppFocusRequester = remember { FocusRequester() }
-
     val wifiFocused = remember { mutableStateOf(false) }
     val settingsFocused = remember { mutableStateOf(false) }
     val profileFocused = remember { mutableStateOf(false) }
     val context = LocalContext.current
-
-    val clickedPackageName by remember { mutableStateOf("") }
 
     val exoPlayer = remember {
         ExoPlayer.Builder(context).build().apply {
@@ -120,10 +114,6 @@ fun HomePage(
             playWhenReady = true
             repeatMode = ExoPlayer.REPEAT_MODE_ONE // Loop the video
         }
-    }
-
-    LaunchedEffect(Unit) {
-        firstAppFocusRequester.requestFocus()
     }
 
     val lifecycleOwner = LocalLifecycleOwner.current
@@ -291,109 +281,7 @@ fun HomePage(
 
                 Spacer(modifier = Modifier.weight(2f)) // Pushes app list to the bottom or center
 
-                // Horizontal List of Apps (Placeholder)
-                Box(
-                    contentAlignment = Alignment.Center, // Center the content within the Box
-                    modifier = Modifier
-                        .padding(16.dp)
-                        .clip(RoundedCornerShape(12.dp))
-                        .background(TVColors.Surface.copy(alpha = 0.5f)) // Optional background for app list area
-                ) {
-                    when (homeState.value) {
-                        is HomeLoadingFetchAppsState -> {
-                            LCircularLoading()
-                        }
-
-                        is HomeLoadedFetchAppState -> {
-                            val apps = (homeState.value as HomeLoadedFetchAppState).apps
-                            LazyRow(
-                                horizontalArrangement = Arrangement.Center,
-                                verticalAlignment = Alignment.CenterVertically
-                            )
-                            {
-                                items(apps) { app ->
-                                    val isFirst = apps.indexOf(app) == 0
-                                    val appListFocusRequester =
-                                        if (isFirst) firstAppFocusRequester else remember { FocusRequester() }
-                                    val appListFocused = remember { mutableStateOf(false) }
-                                    val imageSize = animateDpAsState(
-                                        targetValue = if (appListFocused.value) 60.dp else 55.dp,
-                                        label = "AppIconSize"
-                                    )
-                                    Column(
-                                        horizontalAlignment = Alignment.CenterHorizontally,
-                                        modifier = Modifier
-                                            .padding(
-                                                top = 8.dp,
-                                                bottom = 8.dp,
-                                                start = 15.dp,
-                                                end = 15.dp
-                                            )
-                                            .focusRequester(appListFocusRequester)
-                                            .onFocusChanged { appListFocused.value = it.isFocused }
-                                            .focusable()
-                                            .onKeyEvent { event ->
-                                                if (event.type == KeyEventType.KeyUp &&
-                                                    (event.key == Key.Enter || event.key == Key.NumPadEnter || event.key == Key.DirectionCenter)
-                                                ) {
-                                                    launchAppVM.launchApp(app.packageName)
-                                                    true
-                                                } else {
-                                                    false
-                                                }
-                                            }
-                                    ) {
-                                        AsyncImage(
-                                            model = app.icon,
-                                            contentDescription = app.name,
-                                            modifier = Modifier
-                                                .size(imageSize.value)
-                                                .drawBehind {
-                                                    if (appListFocused.value) {
-                                                        drawRoundRect(
-                                                            color = TVColors.OnSurfaceVariant,
-                                                            size = size,
-                                                            cornerRadius = CornerRadius(12.dp.toPx()),
-                                                        )
-                                                    }
-                                                }
-                                                .padding(10.dp)
-                                        )
-                                        if (appListFocused.value) {
-                                            Spacer(modifier = Modifier.height(8.dp))
-                                            Text(
-                                                text = app.name,
-                                                maxLines = 1,
-                                                style = TVTypography.BodySmall
-                                            )
-                                        }
-                                    }
-                                }
-                            }
-                        }
-
-                        is HomeErrorFetchAppsState -> {
-                            Text(
-                                text = (homeState.value as HomeErrorFetchAppsState).message,
-                                style = TVTypography.BodyLarge.copy(
-                                    color = TVColors.OnSurface,
-                                    textAlign = TextAlign.Center
-                                )
-                            )
-                        }
-
-                        else -> {
-                            Text(
-                                text = "No apps found",
-                                style = TVTypography.BodyLarge.copy(
-                                    color = TVColors.OnSurface,
-                                    textAlign = TextAlign.Center
-                                )
-                            )
-                        }
-                    }
-                    // Implement your LazyRow or other horizontal list here
-                }
+                ListApps()
             }
         }
     }

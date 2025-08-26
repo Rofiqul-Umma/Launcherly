@@ -30,7 +30,6 @@ class LaunchAppViewModel @Inject constructor(val service: LaunchAppService): Vie
         viewModelScope.launch {
             try {
                 emit(LaunchAppLoading(packageName))
-                delay(5.seconds)
                 service.launchApp(packageName)
                 emit(LaunchAppSuccess)
             } catch (e: Exception) {
