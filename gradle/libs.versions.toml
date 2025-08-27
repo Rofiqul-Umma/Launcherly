@@ -18,6 +18,7 @@ hiltAndroid = "2.57.1"
 hiltNavigationCompose = "1.2.0"
 runtimeLivedata = "1.9.0"
 media3Exoplayer = "1.8.0"
+retrofit = "3.0.0"
 media3Ui = "1.8.0"
 
 [libraries]
@@ -27,6 +28,7 @@ androidx-compose-bom = { group = "androidx.compose", name = "compose-bom", versi
 androidx-credentials = { module = "androidx.credentials:credentials", version.ref = "credentials" }
 androidx-ui = { group = "androidx.compose.ui", name = "ui" }
 androidx-ui-graphics = { group = "androidx.compose.ui", name = "ui-graphics" }
+converter-gson = { module = "com.squareup.retrofit2:converter-gson", version.ref = "retrofit" }
 androidx-ui-tooling = { group = "androidx.compose.ui", name = "ui-tooling" }
 androidx-ui-tooling-preview = { group = "androidx.compose.ui", name = "ui-tooling-preview" }
 androidx-ui-test-manifest = { group = "androidx.compose.ui", name = "ui-test-manifest" }

@@ -49,7 +49,7 @@ import com.rofiq.launcherly.features.launch_app.view_model.LaunchAppViewModel
 fun ListApps(
     homeVM: HomeViewModel = hiltViewModel(),
     launchAppVM: LaunchAppViewModel = hiltViewModel(),
-){
+) {
     val homeState = homeVM.homeState.collectAsState()
     val firstAppFocusRequester = remember { FocusRequester() }
 
@@ -89,10 +89,7 @@ fun ListApps(
                             horizontalAlignment = Alignment.CenterHorizontally,
                             modifier = Modifier
                                 .padding(
-                                    top = 8.dp,
-                                    bottom = 8.dp,
-                                    start = 15.dp,
-                                    end = 15.dp
+                                    8.dp
                                 )
                                 .focusRequester(appListFocusRequester)
                                 .onFocusChanged { appListFocused.value = it.isFocused }

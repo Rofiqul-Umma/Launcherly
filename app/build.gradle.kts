@@ -78,4 +78,7 @@ dependencies {
     // Google
     implementation(libs.androidx.credentials)
     implementation(libs.googleid)
+
+    // Retrofit converter
+    implementation(libs.converter.gson)
 }

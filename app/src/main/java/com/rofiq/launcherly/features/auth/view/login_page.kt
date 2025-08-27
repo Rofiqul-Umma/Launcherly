@@ -1,7 +1,6 @@
 package com.rofiq.launcherly.features.auth.view
 
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.focusable
@@ -20,63 +19,89 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Lock
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Snackbar
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.fromColorLong
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.input.key.Key
-import androidx.compose.ui.input.key.KeyEventType
-import androidx.compose.ui.input.key.key
-import androidx.compose.ui.input.key.onKeyEvent
-import androidx.compose.ui.input.key.type
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.rofiq.launcherly.R
 import com.rofiq.launcherly.common.color.TVColors
 import com.rofiq.launcherly.common.text_style.TVTypography
+import com.rofiq.launcherly.features.auth.view_model.AuthAuthenticated
+import com.rofiq.launcherly.features.auth.view_model.AuthLoading
+import com.rofiq.launcherly.features.auth.view_model.AuthUnauthenticated
+import com.rofiq.launcherly.features.auth.view_model.AuthViewModel
 
 @Composable
 fun LoginPage(
-    navController: NavController
+    navController: NavController,
+    authVM: AuthViewModel = hiltViewModel(),
 ) {
-    val accessCodeFieldRequester = remember { FocusRequester() }
-    val signInButtonRequester = remember { FocusRequester() }
+    val renameFieldRequester = remember { FocusRequester() }
+    val authState by authVM.authState.collectAsState()
 
-    val accessCodeFieldInteractionSource = remember { MutableInteractionSource() }
-    val isAccessCodeFieldFocused by accessCodeFieldInteractionSource.collectIsFocusedAsState()
+    val renameFieldInteractionSource = remember { MutableInteractionSource() }
+    val isRenameFieldFocused by renameFieldInteractionSource.collectIsFocusedAsState()
+    val snackbarHS = remember { SnackbarHostState() }
 
-    val signInButtonInteractionSource = remember { MutableInteractionSource() }
-    val isSignInButtonFocused by signInButtonInteractionSource.collectIsFocusedAsState()
+    val keyboardCL = LocalSoftwareKeyboardController.current
 
     LaunchedEffect(Unit) {
-        accessCodeFieldRequester.requestFocus()
+        renameFieldRequester.requestFocus()
     }
 
-    val buttonScale by animateFloatAsState(targetValue = if (isSignInButtonFocused) 1.1f else 1.0f, label = "Button Scale")
-    val textFieldScale by animateFloatAsState(targetValue = if (isAccessCodeFieldFocused) 1.05f else 1.0f, label = "TextField Scale")
+    val textFieldScale by animateFloatAsState(targetValue = if (isRenameFieldFocused) 1.05f else 1.0f, label = "TextField Scale")
+
+
+    LaunchedEffect(authState) {
+        when (authState) {
+            is AuthLoading -> {}
+            is AuthAuthenticated -> navController.navigate("home")
+            is AuthUnauthenticated -> snackbarHS.showSnackbar(
+                message = (authState as AuthUnauthenticated).message
+            )
+        }
+    }
 
     Scaffold(
-        containerColor = TVColors.Background
+        containerColor = TVColors.Background,
+        snackbarHost = { SnackbarHost(
+            hostState = snackbarHS,
+            snackbar = { snackbarData ->
+                Snackbar(
+                    snackbarData = snackbarData,
+                    containerColor = TVColors.Border,
+                    contentColor = TVColors.OnSurface,
+                    shape = RoundedCornerShape(12.dp)
+                )
+            }
+        ) }
     ) { paddingValues ->
         Box(
             modifier = Modifier
@@ -131,7 +156,7 @@ fun LoginPage(
                         Spacer(modifier = Modifier.height(10.dp))
 
                         Text(
-                            text = "Enter your access code to continue",
+                            text = "Enter your username to continue",
                             style = TVTypography.BodyLarge.copy(
                                 fontSize = 14.sp
                             ),
@@ -141,15 +166,19 @@ fun LoginPage(
                         Spacer(modifier = Modifier.height(25.dp))
 
                         // Access Code Input - VLEPO style
-                        val accessCode = remember { mutableStateOf("") }
+                        var username by remember { mutableStateOf("") }
                         OutlinedTextField(
-                            value = accessCode.value,
+                            value = username,
+                            isError = authState is AuthAuthenticated,
                             keyboardActions = KeyboardActions(
-                                onDone = { navController.navigate("home") }),
-                            onValueChange = { accessCode.value = it },
+                                onDone = {
+                                    keyboardCL?.hide()
+                                    authVM.signIn(username)
+                                }),
+                            onValueChange = { username = it },
                             placeholder = {
                                 Text(
-                                    text = "Access code",
+                                    text = "Username",
                                     color = TVColors.OnSurfaceSecondary,
                                     style = TVTypography.BodyLarge
                                 )
@@ -169,7 +198,7 @@ fun LoginPage(
                                 )
                                 .width(320.dp)
                                 .height(50.dp)
-                                .focusRequester(accessCodeFieldRequester)
+                                .focusRequester(renameFieldRequester)
                                 .focusable(), // Keep focusable for default behavior
                             shape = RoundedCornerShape(12.dp),
                             colors = OutlinedTextFieldDefaults.colors(
@@ -182,7 +211,7 @@ fun LoginPage(
                                 unfocusedContainerColor = Color.Transparent
                             ),
                             textStyle = TVTypography.BodyLarge,
-                            interactionSource = accessCodeFieldInteractionSource
+                            interactionSource = renameFieldInteractionSource
                         )
                     }
                 }
