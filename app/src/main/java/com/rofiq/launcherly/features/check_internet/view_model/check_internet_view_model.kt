@@ -20,12 +20,7 @@ class CheckInternetViewModel @Inject constructor(
     val checkInternetState: StateFlow<CheckInternetState> = _checkInternetState.asStateFlow()
 
     init {
-        viewModelScope.launch {
-            while (true) {
-                checkInternet()
-                delay(5.minutes)
-            }
-        }
+        checkInternet()
     }
 
     fun emit(state: CheckInternetState) {
@@ -36,13 +31,14 @@ class CheckInternetViewModel @Inject constructor(
 
     fun checkInternet() {
         viewModelScope.launch {
-            emit(CheckInternetLoading)
             try {
-                val result = service.isInternetAvailable()
-                if (result) {
-                    emit(CheckInternetIsConnected)
-                } else {
-                    emit(CheckInternetIsNotConnected)
+                emit(CheckInternetLoading)
+                service.registerInternetCallback { isConnected ->
+                    if (isConnected) {
+                        emit(CheckInternetIsConnected)
+                    } else {
+                        emit(CheckInternetIsNotConnected)
+                    }
                 }
             } catch (e: Exception) {
                 emit(CheckInternetError(e.message ?: "Failed to check internet connection"))

@@ -18,4 +18,17 @@ class AuthService @Inject constructor (val sharedPrefs: SharedPrefsHelper) {
             Result.failure(e)
         }
     }
+
+    fun checkLogin(): Result<Unit> {
+        return try {
+            val data = sharedPrefs.getString("user_data")
+            if (data.isEmpty()) {
+                Result.failure(Exception("User not found"))
+            } else {
+                Result.success(Unit)
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
 }

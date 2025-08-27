@@ -41,7 +41,6 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.fromColorLong
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
@@ -53,6 +52,7 @@ import androidx.navigation.NavController
 import com.rofiq.launcherly.R
 import com.rofiq.launcherly.common.color.TVColors
 import com.rofiq.launcherly.common.text_style.TVTypography
+import com.rofiq.launcherly.common.widgets.LCircularLoading
 import com.rofiq.launcherly.features.auth.view_model.AuthAuthenticated
 import com.rofiq.launcherly.features.auth.view_model.AuthLoading
 import com.rofiq.launcherly.features.auth.view_model.AuthUnauthenticated
@@ -63,20 +63,20 @@ fun LoginPage(
     navController: NavController,
     authVM: AuthViewModel = hiltViewModel(),
 ) {
-    val renameFieldRequester = remember { FocusRequester() }
+    val usernameFieldRequester = remember { FocusRequester() }
     val authState by authVM.authState.collectAsState()
 
-    val renameFieldInteractionSource = remember { MutableInteractionSource() }
-    val isRenameFieldFocused by renameFieldInteractionSource.collectIsFocusedAsState()
+    val usernameFieldInteractionSource = remember { MutableInteractionSource() }
+    val isUsernameFieldFocused by usernameFieldInteractionSource.collectIsFocusedAsState()
     val snackbarHS = remember { SnackbarHostState() }
 
     val keyboardCL = LocalSoftwareKeyboardController.current
 
     LaunchedEffect(Unit) {
-        renameFieldRequester.requestFocus()
+        usernameFieldRequester.requestFocus()
     }
 
-    val textFieldScale by animateFloatAsState(targetValue = if (isRenameFieldFocused) 1.05f else 1.0f, label = "TextField Scale")
+    val textFieldScale by animateFloatAsState(targetValue = if (isUsernameFieldFocused) 1.05f else 1.0f, label = "TextField Scale")
 
 
     LaunchedEffect(authState) {
@@ -172,6 +172,7 @@ fun LoginPage(
                             isError = authState is AuthAuthenticated,
                             keyboardActions = KeyboardActions(
                                 onDone = {
+                                    usernameFieldRequester.freeFocus()
                                     keyboardCL?.hide()
                                     authVM.signIn(username)
                                 }),
@@ -184,11 +185,14 @@ fun LoginPage(
                                 )
                             },
                             leadingIcon = {
-                                Icon(
-                                    Icons.Outlined.Lock,
-                                    contentDescription = "Lock Icon",
-                                    tint = Color.White
-                                )
+                                when(authState) {
+                                    is AuthLoading -> LCircularLoading(strokeWidth = 3)
+                                    else -> Icon(
+                                        Icons.Outlined.Lock,
+                                        contentDescription = "Lock Icon",
+                                        tint = Color.White
+                                    )
+                                }
                             },
                             singleLine = true,
                             modifier = Modifier
@@ -198,7 +202,7 @@ fun LoginPage(
                                 )
                                 .width(320.dp)
                                 .height(50.dp)
-                                .focusRequester(renameFieldRequester)
+                                .focusRequester(usernameFieldRequester)
                                 .focusable(), // Keep focusable for default behavior
                             shape = RoundedCornerShape(12.dp),
                             colors = OutlinedTextFieldDefaults.colors(
@@ -210,8 +214,10 @@ fun LoginPage(
                                 focusedContainerColor = TVColors.InputBackground,
                                 unfocusedContainerColor = Color.Transparent
                             ),
-                            textStyle = TVTypography.BodyLarge,
-                            interactionSource = renameFieldInteractionSource
+                            textStyle = TVTypography.BodyRegular.copy(
+                                color = TVColors.OnSurface
+                            ),
+                            interactionSource = usernameFieldInteractionSource
                         )
                     }
                 }

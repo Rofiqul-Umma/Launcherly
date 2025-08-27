@@ -26,7 +26,20 @@ class AuthViewModel @Inject constructor(val service: AuthService): ViewModel() {
         }
     }
 
-    fun signIn(username: String){
+    init {
+        checkLogin()
+    }
+
+    fun checkLogin() {
+        viewModelScope.launch {
+            emit(AuthLoading)
+            val response = service.checkLogin()
+            if (response.isSuccess) emit(AuthAuthenticated)
+            else emit(AuthUnauthenticated("Device unauthenticated, please register first to continue"))
+        }
+    }
+
+    fun signIn(username: String) {
        viewModelScope.launch {
            try {
                emit(AuthLoading)

@@ -39,6 +39,7 @@ import androidx.compose.ui.input.key.onKeyEvent
 import androidx.compose.ui.input.key.type
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
@@ -66,14 +67,12 @@ import com.rofiq.launcherly.features.home.view.component.ListApps
 @Composable
 fun HomePage(
     dateTimeVM: FetchDateTimeViewModel = hiltViewModel(),
-    getAccountInfoVM: GetAccountInfoViewModel = hiltViewModel(),
     checkInternetVM: CheckInternetViewModel = hiltViewModel(),
     deviceManagerVM: DeviceManagerViewModel = hiltViewModel()
 ) {
 
 
     val fetchDateTimeState = dateTimeVM.fetchDateTimeState.collectAsState()
-    val getAccountInfoState = getAccountInfoVM.getAccountInfoState.collectAsState()
     val checkInternetState = checkInternetVM.checkInternetState.collectAsState()
 
     val settingsFocusRequester = remember { FocusRequester() }
@@ -86,7 +85,7 @@ fun HomePage(
     val exoPlayer = remember {
         ExoPlayer.Builder(context).build().apply {
             val mediaItem =
-                MediaItem.fromUri("android.resource://${context.packageName}/${R.raw.background_video}")
+                MediaItem.fromUri("android.resource://${context.packageName}/${R.raw.background_video_2}")
             setMediaItem(mediaItem)
             prepare()
             playWhenReady = true
@@ -155,87 +154,87 @@ fun HomePage(
                 // Top Row: Settings and Profile Icons
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.End,
+                    horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.Settings,
-                        contentDescription = "Settings",
-                        modifier = Modifier
-                            .onKeyEvent(
-                                onKeyEvent = {
-                                    if (it.key == Key.Enter && it.type == KeyEventType.KeyUp) {
-                                        deviceManagerVM.openSystemSettings()
-                                        true
-                                    } else {
-                                        false
-                                    }
-                                }
-                            )
-                            .size(30.dp)
+                    // Clock and Date
+                    Column(
+                        horizontalAlignment = Alignment.Start
+                    ) {
+                        when (fetchDateTimeState.value) {
+                            is FetchDateTimeLoading -> LCircularLoading()
+                            is FetchDateTimeSuccess -> {
+                                Text(
+                                    text = (fetchDateTimeState.value as FetchDateTimeSuccess).dateTime.time,
+                                    style = TVTypography.HeaderLarge.copy(color = TVColors.OnSurface, fontSize = 35.sp)
+                                )
 
-                            .focusRequester(settingsFocusRequester)
-                            .onFocusChanged { settingsFocused.value = it.isFocused }
-                            .focusable()
-                            .background(
-                                color = if (settingsFocused.value) TVColors.Surface.copy(alpha = 0.5f) else Color.Transparent,
-                                shape = RoundedCornerShape(100.dp)
-                            )
-                            .padding(5.dp),
-                        tint = TVColors.OnSurface
-                    )
-
-                    Spacer(modifier = Modifier.size(16.dp))
-
-                    Icon(
-                        imageVector = if (checkInternetState.value is CheckInternetIsConnected) Icons.Default.Wifi else Icons.Default.WifiOff,
-                        contentDescription = "Wifi",
-                        modifier = Modifier
-                            .onKeyEvent(
-                                onKeyEvent = {
-                                    if (it.key == Key.Enter && it.type == KeyEventType.KeyUp) {
-                                        deviceManagerVM.openNetworkSettings()
-                                        true
-                                    } else {
-                                        false
-                                    }
-                                }
-                            )
-                            .size(30.dp)
-                            .focusRequester(wifiFocusRequester)
-                            .onFocusChanged { wifiFocused.value = it.isFocused }
-                            .focusable()
-                            .background(
-                                color = if (wifiFocused.value) TVColors.Surface.copy(alpha = 0.5f) else Color.Transparent,
-                                shape = RoundedCornerShape(100.dp)
-                            )
-                            .padding(5.dp),
-                        tint = TVColors.OnSurface
-                    )
-
-                }
-
-                Spacer(modifier = Modifier.height(32.dp))
-
-                // Clock and Date
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-
-                    when (fetchDateTimeState.value) {
-                        is FetchDateTimeLoading -> LCircularLoading()
-                        is FetchDateTimeSuccess -> {
-                            Text(
-                                text = (fetchDateTimeState.value as FetchDateTimeSuccess).dateTime.time,
-                                style = TVTypography.HeaderLarge.copy(color = TVColors.OnSurface)
-                            )
-
-                            Text(
-                                text = (fetchDateTimeState.value as FetchDateTimeSuccess).dateTime.date,
-                                style = TVTypography.BodyLarge.copy(color = TVColors.OnSurfaceVariant)
-                            )
+                                Text(
+                                    text = (fetchDateTimeState.value as FetchDateTimeSuccess).dateTime.date,
+                                    style = TVTypography.BodyLarge.copy(color = TVColors.OnSurfaceVariant)
+                                )
+                            }
                         }
+                    }
+
+                    Row(
+                        horizontalArrangement = Arrangement.End,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Settings,
+                            contentDescription = "Settings",
+                            modifier = Modifier
+                                .onKeyEvent(
+                                    onKeyEvent = {
+                                        if (it.key == Key.Enter && it.type == KeyEventType.KeyUp) {
+                                            deviceManagerVM.openSystemSettings()
+                                            true
+                                        } else {
+                                            false
+                                        }
+                                    }
+                                )
+                                .size(30.dp)
+
+                                .focusRequester(settingsFocusRequester)
+                                .onFocusChanged { settingsFocused.value = it.isFocused }
+                                .focusable()
+                                .background(
+                                    color = if (settingsFocused.value) TVColors.OnSurfaceSecondary.copy(alpha = 0.5f) else Color.Transparent,
+                                    shape = RoundedCornerShape(100.dp)
+                                )
+                                .padding(5.dp),
+                            tint = TVColors.OnSurface
+                        )
+
+                        Spacer(modifier = Modifier.size(16.dp))
+
+                        Icon(
+                            imageVector = if (checkInternetState.value is CheckInternetIsConnected) Icons.Default.Wifi else Icons.Default.WifiOff,
+                            contentDescription = "Wifi",
+                            modifier = Modifier
+                                .onKeyEvent(
+                                    onKeyEvent = {
+                                        if (it.key == Key.Enter && it.type == KeyEventType.KeyUp) {
+                                            deviceManagerVM.openNetworkSettings()
+                                            true
+                                        } else {
+                                            false
+                                        }
+                                    }
+                                )
+                                .size(30.dp)
+                                .focusRequester(wifiFocusRequester)
+                                .onFocusChanged { wifiFocused.value = it.isFocused }
+                                .focusable()
+                                .background(
+                                    color = if (wifiFocused.value) TVColors.OnSurfaceSecondary.copy(alpha = 0.5f) else Color.Transparent,
+                                    shape = RoundedCornerShape(100.dp)
+                                )
+                                .padding(5.dp),
+                            tint = TVColors.OnSurface
+                        )
                     }
                 }
 

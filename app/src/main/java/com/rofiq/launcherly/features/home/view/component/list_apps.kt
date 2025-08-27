@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fitInside
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -53,16 +54,16 @@ fun ListApps(
     val homeState = homeVM.homeState.collectAsState()
     val firstAppFocusRequester = remember { FocusRequester() }
 
-    LaunchedEffect(Unit) {
+    LaunchedEffect(firstAppFocusRequester) {
         firstAppFocusRequester.requestFocus()
     }
 
     Box(
         contentAlignment = Alignment.Center, // Center the content within the Box
         modifier = Modifier
-            .padding(16.dp)
-            .clip(RoundedCornerShape(12.dp))
-            .background(TVColors.Surface.copy(alpha = 0.5f)) // Optional background for app list area
+            .padding(10.dp)
+            .clip(RoundedCornerShape(18.dp))
+            .background(TVColors.Surface.copy(alpha = 0.4f)) // Optional background for app list area
     ) {
         when (homeState.value) {
             is HomeLoadingFetchAppsState -> {
@@ -122,14 +123,14 @@ fun ListApps(
                                     .padding(10.dp)
                             )
 
-                            if (appListFocused.value) {
-                                Spacer(modifier = Modifier.height(8.dp))
-                                Text(
-                                    text = app.name,
-                                    maxLines = 1,
-                                    style = TVTypography.BodySmall
-                                )
-                            }
+//                            if (appListFocused.value) {
+//                                Spacer(modifier = Modifier.height(8.dp))
+//                                Text(
+//                                    text = app.name,
+//                                    maxLines = 1,
+//                                    style = TVTypography.BodySmall
+//                                )
+//                            }
                         }
                     }
                 }
