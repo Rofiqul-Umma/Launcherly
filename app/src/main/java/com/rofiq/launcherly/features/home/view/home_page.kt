@@ -106,6 +106,7 @@ fun HomePage(
         }
         lifecycleOwner.lifecycle.addObserver(observer)
         onDispose {
+            exoPlayer.release()
             lifecycleOwner.lifecycle.removeObserver(observer)
         }
     }
