@@ -82,7 +82,9 @@ fun LoginPage(
     LaunchedEffect(authState) {
         when (authState) {
             is AuthLoading -> {}
-            is AuthAuthenticated -> navController.navigate("home")
+            is AuthAuthenticated -> navController.navigate("home") {
+                popUpTo("login") { inclusive = true }
+            }
             is AuthUnauthenticated -> snackbarHS.showSnackbar(
                 message = (authState as AuthUnauthenticated).message
             )
