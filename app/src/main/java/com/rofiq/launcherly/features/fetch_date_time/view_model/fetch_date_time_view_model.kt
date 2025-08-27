@@ -22,12 +22,7 @@ class FetchDateTimeViewModel @Inject constructor(
     val fetchDateTimeState: StateFlow<FetchDateTimeState> = _fetchDateTimeState.asStateFlow()
 
     init {
-        viewModelScope.launch {
-            while (true) {
-                fetchCurrentDateTime()
-                delay(1.seconds)
-            }
-        }
+        fetchCurrentDateTime()
     }
 
     fun emit(state: FetchDateTimeState){

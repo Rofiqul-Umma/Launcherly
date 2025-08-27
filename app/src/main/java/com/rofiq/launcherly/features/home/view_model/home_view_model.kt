@@ -23,12 +23,7 @@ class HomeViewModel @Inject constructor(
     val homeState: StateFlow<HomeState> = _homeState.asStateFlow()
 
     init {
-        viewModelScope.launch {
-            while (true) {
-                fetchInstalledApps()
-                delay(1.minutes)
-            }
-        }
+        fetchInstalledApps()
     }
 
     fun emit(state: HomeState) {
