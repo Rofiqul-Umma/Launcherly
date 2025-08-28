@@ -51,6 +51,7 @@ import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.ui.AspectRatioFrameLayout
 import androidx.media3.ui.PlayerView
+import androidx.navigation.NavController
 import com.rofiq.launcherly.R
 import com.rofiq.launcherly.common.color.TVColors
 import com.rofiq.launcherly.common.text_style.TVTypography
@@ -67,6 +68,7 @@ import com.rofiq.launcherly.features.home.view.component.ListApps
 @OptIn(UnstableApi::class)
 @Composable
 fun HomePage(
+    navController: NavController,
     dateTimeVM: FetchDateTimeViewModel = hiltViewModel(),
     checkInternetVM: CheckInternetViewModel = hiltViewModel(),
     deviceManagerVM: DeviceManagerViewModel = hiltViewModel()
@@ -198,7 +200,7 @@ fun HomePage(
                                 .padding(5.dp)
                                 .onKeyEvent { keyEvent ->
                                     if (keyEvent.key == Key.DirectionCenter && keyEvent.type == KeyEventType.KeyUp) {
-                                        deviceManagerVM.openSystemSettings()
+                                        navController.navigate("guided_settings")
                                         true
                                     } else false
                                 },

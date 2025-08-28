@@ -16,6 +16,7 @@ import androidx.tv.material3.MaterialTheme
 import com.rofiq.launcherly.features.app_change_receiver.receiver.AppChangeReceiver
 import com.rofiq.launcherly.features.auth.view.LoginPage
 import com.rofiq.launcherly.features.fetch_date_time.view_model.FetchDateTimeViewModel
+import com.rofiq.launcherly.features.guided_settings.view.GuidedSettingsStep
 import com.rofiq.launcherly.features.home.view.HomePage
 import com.rofiq.launcherly.features.home.view_model.HomeViewModel
 import dagger.hilt.android.AndroidEntryPoint
@@ -36,7 +37,10 @@ class MainActivity : ComponentActivity() {
                 NavHost(navController = navController, startDestination = "login") {
                     composable("login") { LoginPage(navController) }
                     composable("home")  {
-                        HomePage()
+                        HomePage(navController)
+                    }
+                    composable("guided_settings") {
+                        GuidedSettingsStep(onBack = { navController.popBackStack() })
                     }
                 }
             }
