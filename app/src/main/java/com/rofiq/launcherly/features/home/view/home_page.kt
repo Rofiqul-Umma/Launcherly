@@ -2,6 +2,7 @@ package com.rofiq.launcherly.features.home.view
 
 import androidx.annotation.OptIn
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.focusable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -186,18 +187,7 @@ fun HomePage(
                             imageVector = Icons.Default.Settings,
                             contentDescription = "Settings",
                             modifier = Modifier
-                                .onKeyEvent(
-                                    onKeyEvent = {
-                                        if (it.key == Key.Enter && it.type == KeyEventType.KeyUp) {
-                                            deviceManagerVM.openSystemSettings()
-                                            true
-                                        } else {
-                                            false
-                                        }
-                                    }
-                                )
                                 .size(30.dp)
-
                                 .focusRequester(settingsFocusRequester)
                                 .onFocusChanged { settingsFocused.value = it.isFocused }
                                 .focusable()
@@ -205,7 +195,13 @@ fun HomePage(
                                     color = if (settingsFocused.value) TVColors.OnSurfaceSecondary.copy(alpha = 0.5f) else Color.Transparent,
                                     shape = RoundedCornerShape(100.dp)
                                 )
-                                .padding(5.dp),
+                                .padding(5.dp)
+                                .onKeyEvent { keyEvent ->
+                                    if (keyEvent.key == Key.DirectionCenter && keyEvent.type == KeyEventType.KeyUp) {
+                                        deviceManagerVM.openSystemSettings()
+                                        true
+                                    } else false
+                                },
                             tint = TVColors.OnSurface
                         )
 
@@ -215,16 +211,6 @@ fun HomePage(
                             imageVector = if (checkInternetState.value is CheckInternetIsConnected) Icons.Default.Wifi else Icons.Default.WifiOff,
                             contentDescription = "Wifi",
                             modifier = Modifier
-                                .onKeyEvent(
-                                    onKeyEvent = {
-                                        if (it.key == Key.Enter && it.type == KeyEventType.KeyUp) {
-                                            deviceManagerVM.openNetworkSettings()
-                                            true
-                                        } else {
-                                            false
-                                        }
-                                    }
-                                )
                                 .size(30.dp)
                                 .focusRequester(wifiFocusRequester)
                                 .onFocusChanged { wifiFocused.value = it.isFocused }
@@ -233,6 +219,12 @@ fun HomePage(
                                     color = if (wifiFocused.value) TVColors.OnSurfaceSecondary.copy(alpha = 0.5f) else Color.Transparent,
                                     shape = RoundedCornerShape(100.dp)
                                 )
+                                .onKeyEvent { keyEvent ->
+                                    if (keyEvent.key == Key.DirectionCenter && keyEvent.type == KeyEventType.KeyUp) {
+                                        deviceManagerVM.openNetworkSettings()
+                                        true
+                                    } else false
+                                }
                                 .padding(5.dp),
                             tint = TVColors.OnSurface
                         )

@@ -3,7 +3,7 @@ package com.rofiq.launcherly.core.shared_prefs_helper
 import android.content.Context
 import android.content.SharedPreferences
 import androidx.core.content.edit
-import jakarta.inject.Inject
+import javax.inject.Inject
 
 class SharedPrefsHelper @Inject constructor (context: Context) {
 

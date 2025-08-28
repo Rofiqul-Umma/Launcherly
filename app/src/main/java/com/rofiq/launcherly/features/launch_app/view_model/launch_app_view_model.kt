@@ -1,5 +1,7 @@
 package com.rofiq.launcherly.features.launch_app.view_model
 
+import android.content.Context
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.rofiq.launcherly.features.launch_app.service.LaunchAppService
@@ -28,18 +30,21 @@ class LaunchAppViewModel @Inject constructor(val service: LaunchAppService): Vie
 
     fun launchApp(packageName: String) {
         viewModelScope.launch {
+            Log.i("LAUNCH_APP", "Launching app with package name $packageName")
             try {
                 emit(LaunchAppLoading(packageName))
                 service.launchApp(packageName)
                 emit(LaunchAppSuccess)
+                // Reset to initial state after delay to allow UI updates
+                delay(1.seconds)
+                emit(LaunchAppInitial)
             } catch (e: Exception) {
+                Log.e("LAUNCH_APP", "Error launching app: ${e.message}", e)
                 emit(LaunchAppError(e.message ?: "Error launching app"))
+                // Reset to initial state after delay on error too
+                delay(3.seconds)
+                emit(LaunchAppInitial)
             }
         }
-    }
-
-    override fun onCleared() {
-        super.onCleared()
-        viewModelScope.coroutineContext.cancel()
     }
 }

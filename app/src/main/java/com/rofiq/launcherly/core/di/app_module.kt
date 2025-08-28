@@ -20,11 +20,6 @@ import javax.inject.Singleton
 @InstallIn(SingletonComponent::class)
 object AppModule {
 
-    @Provides
-    @Singleton
-    fun provideApplicationContext(@ApplicationContext context: Context): Context {
-        return context
-    }
 
     @Provides
     @Singleton
@@ -58,13 +53,19 @@ object AppModule {
 
     @Provides
     @Singleton
-    fun provideLaunchAppService(@ApplicationContext context: Context): LaunchAppService {
-        return LaunchAppService(context)
+    fun provideAuthService(sharedPrefs: SharedPrefsHelper): AuthService {
+        return AuthService(sharedPrefs)
     }
 
     @Provides
     @Singleton
-    fun provideAuthService(sharedPrefs: SharedPrefsHelper): AuthService {
-        return AuthService(sharedPrefs)
+    fun provideDeviceManagerService(@ApplicationContext context: Context): DeviceManagerService{
+        return DeviceManagerService(context)
+    }
+
+    @Provides
+    @Singleton
+    fun provideLaunchAppService(@ApplicationContext context: Context): LaunchAppService {
+        return LaunchAppService(context)
     }
 }

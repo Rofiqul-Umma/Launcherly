@@ -13,7 +13,6 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.tv.material3.ExperimentalTvMaterial3Api
 import androidx.tv.material3.MaterialTheme
-import com.rofiq.launcherly.core.di.DaggerAppComponent
 import com.rofiq.launcherly.features.app_change_receiver.receiver.AppChangeReceiver
 import com.rofiq.launcherly.features.auth.view.LoginPage
 import com.rofiq.launcherly.features.fetch_date_time.view_model.FetchDateTimeViewModel
@@ -30,9 +29,6 @@ class MainActivity : ComponentActivity() {
     @OptIn(ExperimentalTvMaterial3Api::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
-        val appComponent = DaggerAppComponent.create()
-        appComponent.inject(this)
 
         setContent {
             MaterialTheme { // Apply MaterialTheme to the entire navigation structure

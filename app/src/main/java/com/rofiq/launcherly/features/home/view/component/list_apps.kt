@@ -1,7 +1,9 @@
 package com.rofiq.launcherly.features.home.view.component
 
+import android.util.Log
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.focusable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -18,6 +20,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -44,6 +47,9 @@ import com.rofiq.launcherly.features.home.view_model.HomeErrorFetchAppsState
 import com.rofiq.launcherly.features.home.view_model.HomeLoadedFetchAppState
 import com.rofiq.launcherly.features.home.view_model.HomeLoadingFetchAppsState
 import com.rofiq.launcherly.features.home.view_model.HomeViewModel
+import com.rofiq.launcherly.features.launch_app.view_model.LaunchAppError
+import com.rofiq.launcherly.features.launch_app.view_model.LaunchAppLoading
+import com.rofiq.launcherly.features.launch_app.view_model.LaunchAppSuccess
 import com.rofiq.launcherly.features.launch_app.view_model.LaunchAppViewModel
 
 @Composable
@@ -52,10 +58,19 @@ fun ListApps(
     launchAppVM: LaunchAppViewModel = hiltViewModel(),
 ) {
     val homeState = homeVM.homeState.collectAsState()
+    val launchAppState by launchAppVM.launchAppState.collectAsState()
     val firstAppFocusRequester = remember { FocusRequester() }
 
     LaunchedEffect(firstAppFocusRequester) {
         firstAppFocusRequester.requestFocus()
+    }
+
+    when (launchAppState) {
+        is LaunchAppLoading -> {}
+        is LaunchAppSuccess -> {}
+        is LaunchAppError -> {
+            Log.e("LAUNCH_APP_ERROR", (launchAppState as LaunchAppError).message)
+        }
     }
 
     Box(
@@ -95,15 +110,11 @@ fun ListApps(
                                 .focusRequester(appListFocusRequester)
                                 .onFocusChanged { appListFocused.value = it.isFocused }
                                 .focusable()
-                                .onKeyEvent { event ->
-                                    if (event.type == KeyEventType.KeyUp &&
-                                        (event.key == Key.Enter || event.key == Key.NumPadEnter || event.key == Key.DirectionCenter)
-                                    ) {
+                                .onKeyEvent { keyEvent ->
+                                    if (keyEvent.key == Key.DirectionCenter && keyEvent.type == KeyEventType.KeyUp) {
                                         launchAppVM.launchApp(app.packageName)
                                         true
-                                    } else {
-                                        false
-                                    }
+                                    } else false
                                 }
                         ) {
                             AsyncImage(
@@ -122,15 +133,6 @@ fun ListApps(
                                     }
                                     .padding(10.dp)
                             )
-
-//                            if (appListFocused.value) {
-//                                Spacer(modifier = Modifier.height(8.dp))
-//                                Text(
-//                                    text = app.name,
-//                                    maxLines = 1,
-//                                    style = TVTypography.BodySmall
-//                                )
-//                            }
                         }
                     }
                 }
@@ -156,6 +158,5 @@ fun ListApps(
                 )
             }
         }
-        // Implement your LazyRow or other horizontal list here
     }
 }

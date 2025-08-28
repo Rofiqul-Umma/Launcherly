@@ -5,7 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.rofiq.launcherly.features.fetch_date_time.model.FetchDateTimeModel
 import com.rofiq.launcherly.features.fetch_date_time.service.FetchDateTimeService
 import dagger.hilt.android.lifecycle.HiltViewModel
-import jakarta.inject.Inject
+import javax.inject.Inject
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
