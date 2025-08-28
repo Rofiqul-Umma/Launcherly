@@ -41,10 +41,6 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
-    }
-
-    override fun onStart() {
-        super.onStart()
 
         val fetchDateTimeVM: FetchDateTimeViewModel by viewModels()
         val homeVM: HomeViewModel by viewModels()
@@ -72,8 +68,8 @@ class MainActivity : ComponentActivity() {
         registerReceiver(appReceiver, filter)
     }
 
-    override fun onStop() {
-        super.onStop()
+    override fun onDestroy() {
+        super.onDestroy()
         unregisterReceiver(appReceiver)
         unregisterReceiver(timeReceiver)
     }
