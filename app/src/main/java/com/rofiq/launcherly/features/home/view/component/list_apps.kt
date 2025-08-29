@@ -124,10 +124,18 @@ fun ListApps(
                                     .size(imageSize.value)
                                     .drawBehind {
                                         if (appListFocused.value) {
+                                            // Draw the rounded line
                                             drawRoundRect(
-                                                color = TVColors.OnSurfaceVariant,
-                                                size = size,
-                                                cornerRadius = CornerRadius(12.dp.toPx()),
+                                                color = TVColors.OnSurfaceVariant.copy(alpha = 0.5f),
+                                                topLeft = androidx.compose.ui.geometry.Offset(
+                                                    x = 0f,
+                                                    y = size.height - 2.dp.toPx() - (3.5.dp.toPx() / 2) // Adjust Y to center the line
+                                                ),
+                                                size = androidx.compose.ui.geometry.Size(
+                                                    width = size.width,
+                                                    height = 4.dp.toPx()
+                                                ),
+                                                cornerRadius = CornerRadius(x = 10.dp.toPx(), y = 10.dp.toPx()) // Adjust corner radius as needed
                                             )
                                         }
                                     }

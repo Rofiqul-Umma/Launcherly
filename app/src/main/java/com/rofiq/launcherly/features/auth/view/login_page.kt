@@ -63,20 +63,20 @@ fun LoginPage(
     navController: NavController,
     authVM: AuthViewModel = hiltViewModel(),
 ) {
-    val usernameFieldRequester = remember { FocusRequester() }
+    val accessCodeFieldRequester = remember { FocusRequester() }
     val authState by authVM.authState.collectAsState()
 
-    val usernameFieldInteractionSource = remember { MutableInteractionSource() }
-    val isUsernameFieldFocused by usernameFieldInteractionSource.collectIsFocusedAsState()
+    val accessCodeFieldInteractionSource = remember { MutableInteractionSource() }
+    val isAccessCodeFieldFocused by accessCodeFieldInteractionSource.collectIsFocusedAsState()
     val snackbarHS = remember { SnackbarHostState() }
 
     val keyboardCL = LocalSoftwareKeyboardController.current
 
     LaunchedEffect(Unit) {
-        usernameFieldRequester.requestFocus()
+        accessCodeFieldRequester.requestFocus()
     }
 
-    val textFieldScale by animateFloatAsState(targetValue = if (isUsernameFieldFocused) 1.05f else 1.0f, label = "TextField Scale")
+    val textFieldScale by animateFloatAsState(targetValue = if (isAccessCodeFieldFocused) 1.05f else 1.0f, label = "TextField Scale")
 
 
     LaunchedEffect(authState) {
@@ -130,7 +130,7 @@ fun LoginPage(
                 verticalArrangement = Arrangement.Center,
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                // Main Card - VLEPO style but in grey
+
                 Surface(
                     modifier = Modifier
                         .padding(horizontal = 48.dp),
@@ -158,7 +158,7 @@ fun LoginPage(
                         Spacer(modifier = Modifier.height(10.dp))
 
                         Text(
-                            text = "Enter your username to continue",
+                            text = "Enter your access code to continue",
                             style = TVTypography.BodyLarge.copy(
                                 fontSize = 14.sp
                             ),
@@ -167,21 +167,21 @@ fun LoginPage(
 
                         Spacer(modifier = Modifier.height(25.dp))
 
-                        // Access Code Input - VLEPO style
+
                         var username by remember { mutableStateOf("") }
                         OutlinedTextField(
                             value = username,
                             isError = authState is AuthAuthenticated,
                             keyboardActions = KeyboardActions(
                                 onDone = {
-                                    usernameFieldRequester.freeFocus()
+                                    accessCodeFieldRequester.freeFocus()
                                     keyboardCL?.hide()
                                     authVM.signIn(username)
                                 }),
                             onValueChange = { username = it },
                             placeholder = {
                                 Text(
-                                    text = "Username",
+                                    text = "Access code",
                                     color = TVColors.OnSurfaceSecondary,
                                     style = TVTypography.BodyLarge
                                 )
@@ -204,7 +204,7 @@ fun LoginPage(
                                 )
                                 .width(320.dp)
                                 .height(50.dp)
-                                .focusRequester(usernameFieldRequester)
+                                .focusRequester(accessCodeFieldRequester)
                                 .focusable(), // Keep focusable for default behavior
                             shape = RoundedCornerShape(12.dp),
                             colors = OutlinedTextFieldDefaults.colors(
@@ -219,7 +219,7 @@ fun LoginPage(
                             textStyle = TVTypography.BodyRegular.copy(
                                 color = TVColors.OnSurface
                             ),
-                            interactionSource = usernameFieldInteractionSource
+                            interactionSource = accessCodeFieldInteractionSource
                         )
                     }
                 }

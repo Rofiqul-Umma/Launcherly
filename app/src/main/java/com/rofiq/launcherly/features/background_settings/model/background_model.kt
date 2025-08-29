@@ -40,7 +40,23 @@ object BackgroundDefaults {
             type = BackgroundType.IMAGE,
             resourcePath = "android.resource://com.rofiq.launcherly/raw/background_image_3",
             name = "Default Image 3"
+        ),
+        BackgroundSetting(
+            type = BackgroundType.IMAGE,
+            resourcePath = "android.resource://com.rofiq.launcherly/raw/background_image_4",
+            name = "Default Image 4"
+        ),
+        BackgroundSetting(
+            type = BackgroundType.IMAGE,
+            resourcePath = "android.resource://com.rofiq.launcherly/raw/background_image_5",
+            name = "Default Image 5"
+        ),
+        BackgroundSetting(
+            type = BackgroundType.IMAGE,
+            resourcePath = "android.resource://com.rofiq.launcherly/raw/background_image_6",
+            name = "Default Image 6"
         )
+
 
 
     )

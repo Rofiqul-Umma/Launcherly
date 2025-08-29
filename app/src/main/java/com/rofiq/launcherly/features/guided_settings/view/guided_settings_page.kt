@@ -135,11 +135,11 @@ fun GuidedStepLayout(
             }
         }
 
-        // Back button
-        BackButton(
-            onClick = onBack,
-            modifier = Modifier.align(Alignment.BottomStart)
-        )
+//        // Back button
+//        BackButton(
+//            onClick = onBack,
+//            modifier = Modifier.align(Alignment.BottomStart)
+//        )
     }
 }
 

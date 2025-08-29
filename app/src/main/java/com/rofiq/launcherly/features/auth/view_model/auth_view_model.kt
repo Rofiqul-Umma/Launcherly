@@ -44,8 +44,13 @@ class AuthViewModel @Inject constructor(val service: AuthService): ViewModel() {
            try {
                emit(AuthLoading)
 
+               if (username != "KURA1234") {
+                   emit(AuthUnauthenticated("Invalid Access code"))
+                   return@launch
+               }
+
                if(username.trim().isEmpty()){
-                   emit(AuthUnauthenticated("Username cannot be empty"))
+                   emit(AuthUnauthenticated("Access code cannot be empty"))
                    return@launch
                }
 
