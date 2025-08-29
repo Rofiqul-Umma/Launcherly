@@ -76,12 +76,16 @@ fun DynamicBackground(
                 }
                 lifecycleOwner.lifecycle.addObserver(observer)
                 onDispose {
-                    if (!exoPlayer.isReleased) {
-                        exoPlayer.stop()
-                        exoPlayer.clearMediaItems()
-                        exoPlayer.release()
+                    try {
+                        if (!exoPlayer.isReleased) {
+                            exoPlayer.stop()
+                            exoPlayer.clearMediaItems()
+                            exoPlayer.release()
+                        }
+                        lifecycleOwner.lifecycle.removeObserver(observer)
+                    } catch (e: Exception) {
+                        // Ignore cleanup errors
                     }
-                    lifecycleOwner.lifecycle.removeObserver(observer)
                 }
             }
             
