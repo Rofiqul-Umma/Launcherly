@@ -3,13 +3,12 @@ package com.rofiq.launcherly.core.di
 import android.content.Context
 import com.rofiq.launcherly.core.shared_prefs_helper.SharedPrefsHelper
 import com.rofiq.launcherly.features.auth.service.AuthService
+import com.rofiq.launcherly.features.background_settings.service.BackgroundSettingsService
 import com.rofiq.launcherly.features.check_internet.service.CheckInternetService
 import com.rofiq.launcherly.features.device_manager.service.DeviceManagerService
 import com.rofiq.launcherly.features.fetch_date_time.service.FetchDateTimeService
-import com.rofiq.launcherly.features.get_account_info.service.GetAccountInfoService
 import com.rofiq.launcherly.features.home.service.HomeService
 import com.rofiq.launcherly.features.launch_app.service.LaunchAppService
-import com.rofiq.launcherly.features.background_settings.service.BackgroundSettingsService
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -38,12 +37,6 @@ object AppModule {
     @Singleton
     fun provideFetchDateTimeService(): FetchDateTimeService {
         return FetchDateTimeService()
-    }
-
-    @Provides
-    @Singleton
-    fun provideGetAccountInfoService(@ApplicationContext context: Context): GetAccountInfoService {
-        return GetAccountInfoService(context)
     }
 
     @Provides

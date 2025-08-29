@@ -75,10 +75,6 @@ dependencies {
     // Async Image
     implementation(libs.coil.compose)
 
-    // Google
-    implementation(libs.androidx.credentials)
-    implementation(libs.googleid)
-
     // Retrofit converter
     implementation(libs.converter.gson)
 }
