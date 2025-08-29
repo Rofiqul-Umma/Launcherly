@@ -1,7 +1,6 @@
 package com.rofiq.launcherly.features.background_settings.view
 
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
@@ -10,7 +9,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
@@ -21,8 +19,8 @@ import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.ui.AspectRatioFrameLayout
 import androidx.media3.ui.PlayerView
-import com.rofiq.launcherly.R
-import com.rofiq.launcherly.common.color.TVColors
+import coil.compose.rememberAsyncImagePainter
+import coil.request.ImageRequest
 import com.rofiq.launcherly.features.background_settings.model.BackgroundType
 import com.rofiq.launcherly.features.background_settings.view_model.BackgroundSettingsViewModel
 
@@ -78,16 +76,12 @@ fun DynamicBackground(
                 }
                 lifecycleOwner.lifecycle.addObserver(observer)
                 onDispose {
-                    try {
-                        if (!exoPlayer.isReleased) {
-                            exoPlayer.stop()
-                            exoPlayer.clearMediaItems()
-                            exoPlayer.release()
-                        }
-                        lifecycleOwner.lifecycle.removeObserver(observer)
-                    } catch (e: Exception) {
-                        // Ignore cleanup errors
+                    if (!exoPlayer.isReleased) {
+                        exoPlayer.stop()
+                        exoPlayer.clearMediaItems()
+                        exoPlayer.release()
                     }
+                    lifecycleOwner.lifecycle.removeObserver(observer)
                 }
             }
             
@@ -112,7 +106,13 @@ fun DynamicBackground(
         
         BackgroundType.IMAGE -> {
             Image(
-                painter = painterResource(id = R.drawable.background_auth),
+                painter = rememberAsyncImagePainter(
+                    ImageRequest.Builder(LocalContext.current)
+                        .data(data = currentBackground.resourcePath)
+                        .apply(block = fun ImageRequest.Builder.() {
+                            crossfade(true)
+                        }).build()
+                ),
                 contentDescription = "Background Image",
                 modifier = Modifier.fillMaxSize(),
                 contentScale = ContentScale.Crop

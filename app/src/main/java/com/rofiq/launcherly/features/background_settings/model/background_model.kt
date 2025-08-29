@@ -28,9 +28,21 @@ object BackgroundDefaults {
     val defaultImageBackgrounds = listOf(
         BackgroundSetting(
             type = BackgroundType.IMAGE,
-            resourcePath = "android.resource://com.rofiq.launcherly/drawable/background_auth",
-            name = "Default Image"
+            resourcePath = "android.resource://com.rofiq.launcherly/raw/background_image_1",
+            name = "Default Image 1"
+        ),
+        BackgroundSetting(
+            type = BackgroundType.IMAGE,
+            resourcePath = "android.resource://com.rofiq.launcherly/raw/background_image_2",
+            name = "Default Image 2"
+        ),
+        BackgroundSetting(
+            type = BackgroundType.IMAGE,
+            resourcePath = "android.resource://com.rofiq.launcherly/raw/background_image_3",
+            name = "Default Image 3"
         )
+
+
     )
     
     fun getAllBackgrounds() : List<BackgroundSetting> {
