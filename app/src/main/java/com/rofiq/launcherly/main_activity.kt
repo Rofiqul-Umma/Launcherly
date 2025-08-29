@@ -15,6 +15,7 @@ import androidx.tv.material3.ExperimentalTvMaterial3Api
 import androidx.tv.material3.MaterialTheme
 import com.rofiq.launcherly.features.app_change_receiver.receiver.AppChangeReceiver
 import com.rofiq.launcherly.features.auth.view.LoginPage
+import com.rofiq.launcherly.features.background_settings.view.BackgroundSettingsStep
 import com.rofiq.launcherly.features.fetch_date_time.view_model.FetchDateTimeViewModel
 import com.rofiq.launcherly.features.guided_settings.view.GuidedSettingsStep
 import com.rofiq.launcherly.features.home.view.HomePage
@@ -40,7 +41,10 @@ class MainActivity : ComponentActivity() {
                         HomePage(navController)
                     }
                     composable("guided_settings") {
-                        GuidedSettingsStep(onBack = { navController.popBackStack() })
+                        GuidedSettingsStep(onBack = { navController.popBackStack() }, navController = navController)
+                    }
+                    composable("background_settings") {
+                        BackgroundSettingsStep(onBack = { navController.popBackStack() })
                     }
                 }
             }

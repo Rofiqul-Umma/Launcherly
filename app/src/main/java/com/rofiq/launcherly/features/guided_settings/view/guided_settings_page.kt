@@ -45,6 +45,7 @@ import androidx.compose.ui.input.key.type
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.NavController
 import com.rofiq.launcherly.common.color.TVColors
 import com.rofiq.launcherly.common.text_style.TVTypography
 import com.rofiq.launcherly.features.device_manager.view_model.DeviceManagerViewModel
@@ -59,7 +60,8 @@ data class SettingsItem(
 @Composable
 fun GuidedSettingsStep(
     onBack: () -> Unit,
-    deviceManagerVM: DeviceManagerViewModel = hiltViewModel()
+    deviceManagerVM: DeviceManagerViewModel = hiltViewModel(),
+    navController: NavController
 ) {
     val settingsItems = listOf(
         SettingsItem(
@@ -72,7 +74,7 @@ fun GuidedSettingsStep(
             title = "Background Settings",
             description = "Change wallpaper and background",
             icon = Icons.Default.Wallpaper,
-            action = {  } // You can change this to background settings
+            action = { navController.navigate("background_settings") } // You can change this to background settings
         )
     )
 

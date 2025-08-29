@@ -56,6 +56,7 @@ import com.rofiq.launcherly.R
 import com.rofiq.launcherly.common.color.TVColors
 import com.rofiq.launcherly.common.text_style.TVTypography
 import com.rofiq.launcherly.common.widgets.LCircularLoading
+import com.rofiq.launcherly.features.background_settings.view.DynamicBackground
 import com.rofiq.launcherly.features.check_internet.view_model.CheckInternetIsConnected
 import com.rofiq.launcherly.features.check_internet.view_model.CheckInternetViewModel
 import com.rofiq.launcherly.features.device_manager.view_model.DeviceManagerViewModel
@@ -85,34 +86,7 @@ fun HomePage(
     val settingsFocused = remember { mutableStateOf(false) }
     val context = LocalContext.current
 
-    val exoPlayer = remember {
-        ExoPlayer.Builder(context).build().apply {
-            val mediaItem =
-                MediaItem.fromUri("android.resource://${context.packageName}/${R.raw.background_video_2}")
-            setMediaItem(mediaItem)
-            prepare()
-            playWhenReady = true
-            repeatMode = ExoPlayer.REPEAT_MODE_ONE // Loop the video
-        }
-    }
-
-    val lifecycleOwner = LocalLifecycleOwner.current
-
-    DisposableEffect(exoPlayer, lifecycleOwner) {
-        val observer = LifecycleEventObserver { _, event ->
-            when (event) {
-                Lifecycle.Event.ON_RESUME -> exoPlayer.playWhenReady = true
-                Lifecycle.Event.ON_START -> exoPlayer.playWhenReady = true
-                Lifecycle.Event.ON_PAUSE -> exoPlayer.playWhenReady = false
-                else -> {}
-            }
-        }
-        lifecycleOwner.lifecycle.addObserver(observer)
-        onDispose {
-            exoPlayer.release()
-            lifecycleOwner.lifecycle.removeObserver(observer)
-        }
-    }
+    // ExoPlayer is now handled by DynamicBackground component
 
     Scaffold(
         containerColor = TVColors.Background,
@@ -127,15 +101,8 @@ fun HomePage(
             Box(
                 modifier = Modifier.fillMaxSize()
             ) {
-                AndroidView(
-                    factory = { context ->
-                        PlayerView(context).apply {
-                            player = exoPlayer
-                            useController = false
-                            resizeMode = AspectRatioFrameLayout.RESIZE_MODE_ZOOM
-                        }
-                    }
-                )
+
+                DynamicBackground()
 
                 Box(
                     modifier = Modifier

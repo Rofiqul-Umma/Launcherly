@@ -9,6 +9,7 @@ import com.rofiq.launcherly.features.fetch_date_time.service.FetchDateTimeServic
 import com.rofiq.launcherly.features.get_account_info.service.GetAccountInfoService
 import com.rofiq.launcherly.features.home.service.HomeService
 import com.rofiq.launcherly.features.launch_app.service.LaunchAppService
+import com.rofiq.launcherly.features.background_settings.service.BackgroundSettingsService
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -67,5 +68,11 @@ object AppModule {
     @Singleton
     fun provideLaunchAppService(@ApplicationContext context: Context): LaunchAppService {
         return LaunchAppService(context)
+    }
+
+    @Provides
+    @Singleton
+    fun provideBackgroundSettingsService(sharedPrefs: SharedPrefsHelper): BackgroundSettingsService {
+        return BackgroundSettingsService(sharedPrefs)
     }
 }
