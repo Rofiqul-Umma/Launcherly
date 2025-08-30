@@ -19,8 +19,14 @@ class BackgroundSettingsService @Inject constructor(
     }
     
     fun getCurrentBackground(): BackgroundSetting {
-        BackgroundDefaults.defaultVideoBackgrounds.first()
-
+        // Check if any background settings exist
+        val hasBackgroundType = sharedPrefsHelper.contains(KEY_BACKGROUND_TYPE)
+        
+        // If no background has been set, return the first default video background
+        if (!hasBackgroundType) {
+            return BackgroundDefaults.defaultVideoBackgrounds.first()
+        }
+        
         // Otherwise, retrieve the saved background settings
         val typeStr = sharedPrefsHelper.getString(KEY_BACKGROUND_TYPE, BackgroundType.VIDEO.name)
         val sourceTypeStr = sharedPrefsHelper.getString(KEY_BACKGROUND_SOURCE_TYPE, BackgroundSourceType.URL.name)
@@ -36,6 +42,7 @@ class BackgroundSettingsService @Inject constructor(
     }
     
     fun setBackground(backgroundSetting: BackgroundSetting) {
+        
         sharedPrefsHelper.saveString(KEY_BACKGROUND_TYPE, backgroundSetting.type.name)
         sharedPrefsHelper.saveString(KEY_BACKGROUND_SOURCE_TYPE, backgroundSetting.sourceType.name)
         sharedPrefsHelper.saveString(KEY_BACKGROUND_PATH, backgroundSetting.resourcePath)

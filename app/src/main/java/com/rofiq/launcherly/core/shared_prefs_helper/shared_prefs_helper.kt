@@ -34,6 +34,10 @@ class SharedPrefsHelper @Inject constructor (context: Context) {
         return sharedPreferences.getBoolean(key, defaultValue)
     }
 
+    fun contains(key: String): Boolean {
+        return sharedPreferences.contains(key)
+    }
+
     fun clear() {
         sharedPreferences.edit { clear() }
     }
