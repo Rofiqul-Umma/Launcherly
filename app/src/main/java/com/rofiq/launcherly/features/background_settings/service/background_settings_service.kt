@@ -19,12 +19,13 @@ class BackgroundSettingsService @Inject constructor(
     }
     
     fun getCurrentBackground(): BackgroundSetting {
-        val defaultBackground = BackgroundDefaults.defaultVideoBackgrounds.first()
-        
-        val typeStr = sharedPrefsHelper.getString(KEY_BACKGROUND_TYPE, BackgroundType.IMAGE.name)
-        val sourceTypeStr = sharedPrefsHelper.getString(KEY_BACKGROUND_SOURCE_TYPE, BackgroundSourceType.LOCAL.name)
-        val path = sharedPrefsHelper.getString(KEY_BACKGROUND_PATH, defaultBackground.resourcePath)
-        val name = sharedPrefsHelper.getString(KEY_BACKGROUND_NAME, defaultBackground.name)
+        BackgroundDefaults.defaultVideoBackgrounds.first()
+
+        // Otherwise, retrieve the saved background settings
+        val typeStr = sharedPrefsHelper.getString(KEY_BACKGROUND_TYPE, BackgroundType.VIDEO.name)
+        val sourceTypeStr = sharedPrefsHelper.getString(KEY_BACKGROUND_SOURCE_TYPE, BackgroundSourceType.URL.name)
+        val path = sharedPrefsHelper.getString(KEY_BACKGROUND_PATH, BackgroundDefaults.defaultVideoBackgrounds.first().resourcePath)
+        val name = sharedPrefsHelper.getString(KEY_BACKGROUND_NAME, BackgroundDefaults.defaultVideoBackgrounds.first().name)
             
         return BackgroundSetting(
             type = BackgroundType.valueOf(typeStr),

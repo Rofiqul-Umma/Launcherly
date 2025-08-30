@@ -33,6 +33,7 @@ import com.rofiq.launcherly.R
 import com.rofiq.launcherly.common.widgets.LCircularLoading
 import com.rofiq.launcherly.features.background_settings.model.BackgroundType
 import com.rofiq.launcherly.features.background_settings.view_model.BackgroundSettingsViewModel
+import com.rofiq.launcherly.utils.GoogleDriveUtils
 
 @androidx.annotation.OptIn(UnstableApi::class)
 @Composable
@@ -53,9 +54,18 @@ fun DynamicBackground(
     
     when (lastLoadedBackground.type) {
         BackgroundType.VIDEO -> {
-            val exoPlayer = remember(lastLoadedBackground.resourcePath) {
+            // Convert Google Drive URL to direct download URL for video playback
+            val videoUrl = if (lastLoadedBackground.sourceType == com.rofiq.launcherly.features.background_settings.model.BackgroundSourceType.URL) {
+                GoogleDriveUtils.convertSharingUrlToDownloadUrl(lastLoadedBackground.resourcePath)
+            } else {
+                lastLoadedBackground.resourcePath
+            }
+            
+            android.util.Log.d("DynamicBackground", "Playing video from URL: $videoUrl")
+            
+            val exoPlayer = remember(videoUrl) {
                 ExoPlayer.Builder(context).build().apply {
-                    val mediaItem = MediaItem.fromUri(lastLoadedBackground.resourcePath)
+                    val mediaItem = MediaItem.fromUri(videoUrl)
                     setMediaItem(mediaItem)
                     prepare()
                     playWhenReady = true
@@ -65,7 +75,7 @@ fun DynamicBackground(
                 }
             }
             
-            DisposableEffect(lastLoadedBackground.resourcePath) {
+            DisposableEffect(videoUrl) {
                 val observer = LifecycleEventObserver { _, event ->
                     when (event) {
                         Lifecycle.Event.ON_RESUME -> {
@@ -102,7 +112,7 @@ fun DynamicBackground(
                         }
                         lifecycleOwner.lifecycle.removeObserver(observer)
                     } catch (e: Exception) {
-                        // Ignore cleanup errors
+                        android.util.Log.e("DynamicBackground", "Error releasing ExoPlayer", e)
                     }
                 }
             }

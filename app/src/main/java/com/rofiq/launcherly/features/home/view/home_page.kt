@@ -83,17 +83,17 @@ fun HomePage(
                 .padding(paddingValues)
                 .fillMaxSize()
         ) {
-            // Video Background (Placeholder - You'll need to implement this)
+            // Video Background (Handled by DynamicBackground component)
             Box(
                 modifier = Modifier.fillMaxSize()
             ) {
-
                 DynamicBackground()
-
+                
+                // Overlay with reduced alpha to make content visible
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
-                        .background(TVColors.BackgroundOverlay.copy(alpha = 0.5f))
+                        .background(TVColors.BackgroundOverlay.copy(alpha = 0.3f))
                 )
             }
 

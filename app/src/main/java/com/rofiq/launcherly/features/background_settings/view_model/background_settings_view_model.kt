@@ -16,10 +16,12 @@ import javax.inject.Inject
 class BackgroundSettingsViewModel @Inject constructor(
     private val backgroundSettingsService: BackgroundSettingsService
 ) : ViewModel() {
-    
-    private val _backgroundSettingsState = MutableStateFlow<BackgroundSettingsState>(BackgroundSettingsInitial)
-    val backgroundSettingsState: StateFlow<BackgroundSettingsState> = _backgroundSettingsState.asStateFlow()
-    
+
+    private val _backgroundSettingsState =
+        MutableStateFlow<BackgroundSettingsState>(BackgroundSettingsInitial)
+    val backgroundSettingsState: StateFlow<BackgroundSettingsState> =
+        _backgroundSettingsState.asStateFlow()
+
     init {
         loadBackgroundSettings()
     }
@@ -29,15 +31,15 @@ class BackgroundSettingsViewModel @Inject constructor(
             _backgroundSettingsState.emit(state)
         }
     }
-    
+
     private fun loadBackgroundSettings() {
         viewModelScope.launch {
             try {
-               emit(BackgroundSettingsLoading)
-                
+                emit(BackgroundSettingsLoading)
+
                 val availableBackgrounds = backgroundSettingsService.getAvailableBackgrounds()
                 val currentBackground = backgroundSettingsService.getCurrentBackground()
-                
+
                 emit(
                     BackgroundSettingsLoaded(
                         availableBackgrounds = availableBackgrounds,
@@ -45,11 +47,16 @@ class BackgroundSettingsViewModel @Inject constructor(
                     )
                 )
             } catch (e: Exception) {
+                android.util.Log.e(
+                    "BackgroundSettingsViewModel",
+                    "Error loading background settings",
+                    e
+                )
                 emit(BackgroundSettingsError(e.message ?: "Error loading background settings"))
             }
         }
     }
-    
+
     fun setBackground(backgroundSetting: BackgroundSetting) {
         viewModelScope.launch {
             try {
@@ -60,8 +67,9 @@ class BackgroundSettingsViewModel @Inject constructor(
             }
         }
     }
-    
+
     fun getCurrentBackground(): BackgroundSetting {
-        return backgroundSettingsService.getCurrentBackground()
+        val background = backgroundSettingsService.getCurrentBackground()
+        return background
     }
 }
