@@ -1,6 +1,5 @@
 package com.rofiq.launcherly.features.background_settings.view
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.focusable
@@ -47,8 +46,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import coil.compose.rememberAsyncImagePainter
-import coil.request.ImageRequest
+import coil.compose.AsyncImage
+import coil.request.CachePolicy
 import com.rofiq.launcherly.common.color.TVColors
 import com.rofiq.launcherly.common.text_style.TVTypography
 import com.rofiq.launcherly.common.widgets.LCircularLoading
@@ -57,8 +56,6 @@ import com.rofiq.launcherly.features.background_settings.model.BackgroundType
 import com.rofiq.launcherly.features.background_settings.view_model.BackgroundSettingsLoaded
 import com.rofiq.launcherly.features.background_settings.view_model.BackgroundSettingsLoading
 import com.rofiq.launcherly.features.background_settings.view_model.BackgroundSettingsViewModel
-import com.rofiq.launcherly.features.generate_video_thumbnails.view_model.GenerateVideoThumbnailsLoaded
-import com.rofiq.launcherly.features.generate_video_thumbnails.view_model.GenerateVideoThumbnailsLoading
 import com.rofiq.launcherly.features.generate_video_thumbnails.view_model.GenerateVideoThumbnailsViewModel
 import com.rofiq.launcherly.features.guided_settings.view.GuidedStepLayout
 
@@ -72,7 +69,6 @@ fun BackgroundSettingsStep(
     GuidedStepLayout(
         title = "Background Settings",
         description = "Choose your home screen background",
-        onBack = onBack
     ) {
         when (backgroundState) {
             is BackgroundSettingsLoading -> {
@@ -169,6 +165,8 @@ fun BackgroundCard(
     }
     
     val generateThumbState = generateVideoThumbVM.generateVideoThumbState.collectAsState()
+    
+    val context = LocalContext.current
 
     Card(
         modifier = Modifier
@@ -202,14 +200,14 @@ fun BackgroundCard(
             // Background preview
             when (background.type) {
                 BackgroundType.IMAGE -> {
-                    Image(
-                        painter = rememberAsyncImagePainter(
-                            ImageRequest.Builder(LocalContext.current)
-                                .data(data = background.resourcePath)
-                                .apply(block = fun ImageRequest.Builder.() {
-                                    crossfade(true)
-                                }).build()
-                        ),
+                    // Use AsyncImage for better caching and lifecycle handling
+                    AsyncImage(
+                        model = coil.request.ImageRequest.Builder(context)
+                            .data(background.directUrl)
+                            .crossfade(true)
+                            .memoryCachePolicy(CachePolicy.ENABLED)
+                            .diskCachePolicy(CachePolicy.ENABLED)
+                            .build(),
                         contentDescription = background.name,
                         modifier = Modifier
                             .fillMaxSize()
@@ -228,7 +226,7 @@ fun BackgroundCard(
                     ) {
                         val thumbnail = generateThumbState.value
                         if (thumbnail != null) {
-                            Image(
+                            androidx.compose.foundation.Image(
                                 bitmap = thumbnail.asImageBitmap(),
                                 contentDescription = background.name,
                                 modifier = Modifier

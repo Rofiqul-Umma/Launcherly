@@ -81,11 +81,10 @@ fun GuidedSettingsStep(
     GuidedStepLayout(
         title = "Settings",
         description = "Choose a setting to configure",
-        onBack = onBack
     ) {
         SettingsButtonList(
             items = settingsItems,
-            onBack = onBack
+            onBack = { navController.navigate("home") }
         )
     }
 }
@@ -94,7 +93,6 @@ fun GuidedSettingsStep(
 fun GuidedStepLayout(
     title: String,
     description: String,
-    onBack: () -> Unit,
     content: @Composable () -> Unit
 ) {
     Box(
@@ -134,12 +132,6 @@ fun GuidedStepLayout(
                 content()
             }
         }
-
-//        // Back button
-//        BackButton(
-//            onClick = onBack,
-//            modifier = Modifier.align(Alignment.BottomStart)
-//        )
     }
 }
 
@@ -208,18 +200,22 @@ fun SettingsButton(
                             item.action()
                             true
                         }
+
                         Key.DirectionUp -> {
                             onNavigateUp()
                             true
                         }
+
                         Key.DirectionDown -> {
                             onNavigateDown()
                             true
                         }
+
                         Key.Back -> {
                             onBack()
                             true
                         }
+
                         else -> false
                     }
                 } else false

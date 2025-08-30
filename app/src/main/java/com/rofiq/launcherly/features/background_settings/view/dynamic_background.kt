@@ -1,11 +1,16 @@
 package com.rofiq.launcherly.features.background_settings.view
 
+import android.content.Context
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -19,8 +24,9 @@ import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.ui.AspectRatioFrameLayout
 import androidx.media3.ui.PlayerView
-import coil.compose.rememberAsyncImagePainter
-import coil.request.ImageRequest
+import coil.ImageLoader
+import coil.compose.AsyncImage
+import coil.request.CachePolicy
 import com.rofiq.launcherly.features.background_settings.model.BackgroundType
 import com.rofiq.launcherly.features.background_settings.view_model.BackgroundSettingsViewModel
 
@@ -33,11 +39,19 @@ fun DynamicBackground(
     val lifecycleOwner = LocalLifecycleOwner.current
     val currentBackground = backgroundVM.getCurrentBackground()
     
-    when (currentBackground.type) {
+    // Remember the last loaded background to prevent flickering
+    var lastLoadedBackground by remember { mutableStateOf(currentBackground) }
+    
+    // Update last loaded background when current background changes
+    LaunchedEffect(currentBackground) {
+        lastLoadedBackground = currentBackground
+    }
+    
+    when (lastLoadedBackground.type) {
         BackgroundType.VIDEO -> {
-            val exoPlayer = remember(currentBackground.resourcePath) {
+            val exoPlayer = remember(lastLoadedBackground.resourcePath) {
                 ExoPlayer.Builder(context).build().apply {
-                    val mediaItem = MediaItem.fromUri(currentBackground.resourcePath)
+                    val mediaItem = MediaItem.fromUri(lastLoadedBackground.resourcePath)
                     setMediaItem(mediaItem)
                     prepare()
                     playWhenReady = true
@@ -47,7 +61,7 @@ fun DynamicBackground(
                 }
             }
             
-            DisposableEffect(currentBackground.resourcePath) {
+            DisposableEffect(lastLoadedBackground.resourcePath) {
                 val observer = LifecycleEventObserver { _, event ->
                     when (event) {
                         Lifecycle.Event.ON_RESUME -> {
@@ -109,17 +123,20 @@ fun DynamicBackground(
         }
         
         BackgroundType.IMAGE -> {
-            Image(
-                painter = rememberAsyncImagePainter(
-                    ImageRequest.Builder(LocalContext.current)
-                        .data(data = currentBackground.resourcePath)
-                        .apply(block = fun ImageRequest.Builder.() {
-                            crossfade(true)
-                        }).build()
-                ),
+            // Use AsyncImage which handles caching and lifecycle better
+            AsyncImage(
+                model = coil.request.ImageRequest.Builder(context)
+                    .data(lastLoadedBackground.directUrl)
+                    .crossfade(true)
+                    .memoryCachePolicy(CachePolicy.ENABLED)
+                    .diskCachePolicy(CachePolicy.ENABLED)
+                    .build(),
                 contentDescription = "Background Image",
                 modifier = Modifier.fillMaxSize(),
-                contentScale = ContentScale.Crop
+                contentScale = ContentScale.Crop,
+                // Show the last loaded image while loading new one
+                placeholder = null,
+                error = null
             )
         }
     }
