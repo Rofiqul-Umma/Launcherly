@@ -1,6 +1,8 @@
 package com.rofiq.launcherly.features.background_settings.view
 
 import android.content.Context
+import android.media.MediaCodec.VIDEO_SCALING_MODE_SCALE_TO_FIT_WITH_CROPPING
+import androidx.annotation.OptIn
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
@@ -26,12 +28,13 @@ import androidx.media3.ui.AspectRatioFrameLayout
 import androidx.media3.ui.PlayerView
 import coil.compose.AsyncImage
 import coil.request.CachePolicy
+import coil.size.Scale
 import com.rofiq.launcherly.R
 import com.rofiq.launcherly.features.background_settings.model.BackgroundType
 import com.rofiq.launcherly.features.background_settings.view_model.BackgroundSettingsViewModel
 import com.rofiq.launcherly.utils.GoogleDriveUtils
 
-@androidx.annotation.OptIn(UnstableApi::class)
+@OptIn(UnstableApi::class)
 @Composable
 fun DynamicBackground(
     backgroundVM: BackgroundSettingsViewModel = hiltViewModel()
@@ -115,6 +118,7 @@ fun DynamicBackground(
                     .crossfade(true)
                     .memoryCachePolicy(CachePolicy.ENABLED)
                     .diskCachePolicy(CachePolicy.ENABLED)
+                    .scale(Scale.FIT)
                     .build(),
                 contentDescription = "Background Image",
                 modifier = Modifier.fillMaxSize(),
@@ -126,6 +130,7 @@ fun DynamicBackground(
     }
 }
 
+@OptIn(UnstableApi::class)
 @Composable
 private fun rememberExoPlayer(context: Context, videoUrl: String): ExoPlayer {
     val exoPlayer = remember(videoUrl) {
@@ -135,7 +140,7 @@ private fun rememberExoPlayer(context: Context, videoUrl: String): ExoPlayer {
             prepare()
             playWhenReady = true
             repeatMode = ExoPlayer.REPEAT_MODE_ONE
-            videoScalingMode = androidx.media3.common.C.VIDEO_SCALING_MODE_SCALE_TO_FIT_WITH_CROPPING
+            videoScalingMode = VIDEO_SCALING_MODE_SCALE_TO_FIT_WITH_CROPPING
 
             // Add listener to handle playback errors
             addListener(object : Player.Listener {
