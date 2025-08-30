@@ -111,7 +111,7 @@ fun ListApps(
                                 .onFocusChanged { appListFocused.value = it.isFocused }
                                 .focusable()
                                 .onKeyEvent { keyEvent ->
-                                    if (keyEvent.key == Key.DirectionCenter && keyEvent.type == KeyEventType.KeyUp) {
+                                    if ((keyEvent.key == Key.DirectionCenter || keyEvent.key == Key.Enter) && keyEvent.type == KeyEventType.KeyUp) {
                                         launchAppVM.launchApp(app.packageName)
                                         true
                                     } else false

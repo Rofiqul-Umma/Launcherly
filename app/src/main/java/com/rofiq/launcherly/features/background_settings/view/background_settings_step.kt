@@ -64,7 +64,7 @@ fun BackgroundSettingsStep(
     backgroundVM: BackgroundSettingsViewModel = hiltViewModel()
 ) {
     val backgroundState by backgroundVM.backgroundSettingsState.collectAsState()
-    
+
     GuidedStepLayout(
         title = "Background Settings",
         description = "Choose your home screen background",
@@ -79,7 +79,7 @@ fun BackgroundSettingsStep(
                     LCircularLoading()
                 }
             }
-            
+
             is BackgroundSettingsLoaded -> {
                 BackgroundGrid(
                     backgrounds = (backgroundState as BackgroundSettingsLoaded).availableBackgrounds,
@@ -88,7 +88,7 @@ fun BackgroundSettingsStep(
                     onBack = onBack
                 )
             }
-            
+
             else -> {
                 Box(
                     modifier = Modifier.fillMaxSize(),
@@ -113,11 +113,11 @@ fun BackgroundGrid(
 ) {
     var focusedIndex by remember { mutableIntStateOf(0) }
     val focusRequesters = remember { backgrounds.map { FocusRequester() } }
-    
+
     LaunchedEffect(Unit) {
         focusRequesters.firstOrNull()?.requestFocus()
     }
-    
+
     LazyVerticalGrid(
         columns = GridCells.Fixed(3),
         horizontalArrangement = Arrangement.spacedBy(16.dp),
@@ -164,7 +164,7 @@ fun BackgroundCard(
                 shape = RoundedCornerShape(12.dp)
             )
             .onKeyEvent { keyEvent ->
-                if (keyEvent.key == Key.DirectionCenter && keyEvent.type == KeyEventType.KeyUp) {
+                if ((keyEvent.key == Key.DirectionCenter || keyEvent.key == Key.Enter) && keyEvent.type == KeyEventType.KeyUp) {
                     onSelected()
                     true
                 } else if (keyEvent.key == Key.Back && keyEvent.type == KeyEventType.KeyUp) {
@@ -199,6 +199,7 @@ fun BackgroundCard(
                         contentScale = ContentScale.Crop
                     )
                 }
+
                 BackgroundType.VIDEO -> {
                     // Video thumbnail placeholder
                     Box(
@@ -216,7 +217,7 @@ fun BackgroundCard(
                     }
                 }
             }
-            
+
             // Selection indicator
             if (isSelected) {
                 Box(
@@ -233,7 +234,7 @@ fun BackgroundCard(
                     )
                 }
             }
-            
+
             // Background name
             Box(
                 modifier = Modifier

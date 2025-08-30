@@ -2,7 +2,6 @@ package com.rofiq.launcherly.features.home.view
 
 import androidx.annotation.OptIn
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.focusable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -11,7 +10,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -23,7 +21,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -41,18 +38,9 @@ import androidx.compose.ui.input.key.type
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.viewinterop.AndroidView
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleEventObserver
-import androidx.lifecycle.compose.LocalLifecycleOwner
-import androidx.media3.common.MediaItem
 import androidx.media3.common.util.UnstableApi
-import androidx.media3.exoplayer.ExoPlayer
-import androidx.media3.ui.AspectRatioFrameLayout
-import androidx.media3.ui.PlayerView
 import androidx.navigation.NavController
-import com.rofiq.launcherly.R
 import com.rofiq.launcherly.common.color.TVColors
 import com.rofiq.launcherly.common.text_style.TVTypography
 import com.rofiq.launcherly.common.widgets.LCircularLoading
@@ -63,7 +51,6 @@ import com.rofiq.launcherly.features.device_manager.view_model.DeviceManagerView
 import com.rofiq.launcherly.features.fetch_date_time.view_model.FetchDateTimeLoading
 import com.rofiq.launcherly.features.fetch_date_time.view_model.FetchDateTimeSuccess
 import com.rofiq.launcherly.features.fetch_date_time.view_model.FetchDateTimeViewModel
-import com.rofiq.launcherly.features.get_account_info.view_model.GetAccountInfoViewModel
 import com.rofiq.launcherly.features.home.view.component.ListApps
 
 @OptIn(UnstableApi::class)
@@ -84,7 +71,6 @@ fun HomePage(
 
     val wifiFocused = remember { mutableStateOf(false) }
     val settingsFocused = remember { mutableStateOf(false) }
-    val context = LocalContext.current
 
     // ExoPlayer is now handled by DynamicBackground component
 
@@ -166,7 +152,7 @@ fun HomePage(
                                 )
                                 .padding(5.dp)
                                 .onKeyEvent { keyEvent ->
-                                    if (keyEvent.key == Key.DirectionCenter && keyEvent.type == KeyEventType.KeyUp) {
+                                    if ((keyEvent.key == Key.DirectionCenter || keyEvent.key == Key.Enter) && keyEvent.type == KeyEventType.KeyUp) {
                                         navController.navigate("guided_settings")
                                         true
                                     } else false
@@ -189,7 +175,7 @@ fun HomePage(
                                     shape = RoundedCornerShape(100.dp)
                                 )
                                 .onKeyEvent { keyEvent ->
-                                    if (keyEvent.key == Key.DirectionCenter && keyEvent.type == KeyEventType.KeyUp) {
+                                    if ((keyEvent.key == Key.DirectionCenter || keyEvent.key == Key.Enter) && keyEvent.type == KeyEventType.KeyUp) {
                                         deviceManagerVM.openNetworkSettings()
                                         true
                                     } else false

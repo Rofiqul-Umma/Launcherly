@@ -204,7 +204,7 @@ fun SettingsButton(
             .onKeyEvent { keyEvent ->
                 if (keyEvent.type == KeyEventType.KeyUp) {
                     when (keyEvent.key) {
-                        Key.DirectionCenter -> {
+                        Key.DirectionCenter, Key.Enter -> {
                             item.action()
                             true
                         }
