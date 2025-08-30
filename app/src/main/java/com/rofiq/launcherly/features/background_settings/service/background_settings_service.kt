@@ -39,4 +39,8 @@ class BackgroundSettingsService @Inject constructor(
     fun getAvailableBackgrounds(): List<BackgroundSetting> {
         return BackgroundDefaults.getAllBackgrounds()
     }
+
+    fun getBackgroundVideo(): List<BackgroundSetting> {
+        return BackgroundDefaults.getListDefaultVideoBackground()
+    }
 }

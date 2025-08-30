@@ -7,6 +7,7 @@ import com.rofiq.launcherly.features.background_settings.service.BackgroundSetti
 import com.rofiq.launcherly.features.check_internet.service.CheckInternetService
 import com.rofiq.launcherly.features.device_manager.service.DeviceManagerService
 import com.rofiq.launcherly.features.fetch_date_time.service.FetchDateTimeService
+import com.rofiq.launcherly.features.generate_video_thumbnails.service.GenerateVideoThumbnailsService
 import com.rofiq.launcherly.features.home.service.HomeService
 import com.rofiq.launcherly.features.launch_app.service.LaunchAppService
 import dagger.Module
@@ -67,5 +68,11 @@ object AppModule {
     @Singleton
     fun provideBackgroundSettingsService(sharedPrefs: SharedPrefsHelper): BackgroundSettingsService {
         return BackgroundSettingsService(sharedPrefs)
+    }
+
+    @Provides
+    @Singleton
+    fun provideGenerateVideoThumbnailsService(@ApplicationContext context: Context): GenerateVideoThumbnailsService {
+        return GenerateVideoThumbnailsService(context)
     }
 }

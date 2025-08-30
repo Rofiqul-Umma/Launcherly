@@ -15,46 +15,52 @@ object BackgroundDefaults {
     val defaultVideoBackgrounds = listOf(
         BackgroundSetting(
             type = BackgroundType.VIDEO,
-            resourcePath = "android.resource://com.rofiq.launcherly/raw/background_video",
-            name = "Default Video 1"
+            resourcePath = "android.resource://com.rofiq.launcherly/raw/background_video_1",
+            name = "Video"
         ),
         BackgroundSetting(
             type = BackgroundType.VIDEO,
             resourcePath = "android.resource://com.rofiq.launcherly/raw/background_video_2", 
-            name = "Default Video 2"
+            name = "Video"
+        ),
+        BackgroundSetting(
+            type = BackgroundType.VIDEO,
+            resourcePath = "android.resource://com.rofiq.launcherly/raw/background_video_3",
+            name = "Video"
         )
+
     )
     
     val defaultImageBackgrounds = listOf(
         BackgroundSetting(
             type = BackgroundType.IMAGE,
             resourcePath = "android.resource://com.rofiq.launcherly/raw/background_image_1",
-            name = "Default Image 1"
+            name = "Image"
         ),
         BackgroundSetting(
             type = BackgroundType.IMAGE,
             resourcePath = "android.resource://com.rofiq.launcherly/raw/background_image_2",
-            name = "Default Image 2"
+            name = "Image"
         ),
         BackgroundSetting(
             type = BackgroundType.IMAGE,
             resourcePath = "android.resource://com.rofiq.launcherly/raw/background_image_3",
-            name = "Default Image 3"
+            name = "Image"
         ),
         BackgroundSetting(
             type = BackgroundType.IMAGE,
             resourcePath = "android.resource://com.rofiq.launcherly/raw/background_image_4",
-            name = "Default Image 4"
+            name = "Image"
         ),
         BackgroundSetting(
             type = BackgroundType.IMAGE,
             resourcePath = "android.resource://com.rofiq.launcherly/raw/background_image_5",
-            name = "Default Image 5"
+            name = "Image"
         ),
         BackgroundSetting(
             type = BackgroundType.IMAGE,
             resourcePath = "android.resource://com.rofiq.launcherly/raw/background_image_6",
-            name = "Default Image 6"
+            name = "Image"
         )
 
 
@@ -63,5 +69,9 @@ object BackgroundDefaults {
     
     fun getAllBackgrounds() : List<BackgroundSetting> {
         return defaultImageBackgrounds + defaultVideoBackgrounds
+    }
+
+    fun getListDefaultVideoBackground() : List<BackgroundSetting> {
+        return defaultVideoBackgrounds
     }
 }

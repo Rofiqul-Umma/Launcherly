@@ -35,6 +35,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.KeyEventType
 import androidx.compose.ui.input.key.key
@@ -56,6 +57,9 @@ import com.rofiq.launcherly.features.background_settings.model.BackgroundType
 import com.rofiq.launcherly.features.background_settings.view_model.BackgroundSettingsLoaded
 import com.rofiq.launcherly.features.background_settings.view_model.BackgroundSettingsLoading
 import com.rofiq.launcherly.features.background_settings.view_model.BackgroundSettingsViewModel
+import com.rofiq.launcherly.features.generate_video_thumbnails.view_model.GenerateVideoThumbnailsLoaded
+import com.rofiq.launcherly.features.generate_video_thumbnails.view_model.GenerateVideoThumbnailsLoading
+import com.rofiq.launcherly.features.generate_video_thumbnails.view_model.GenerateVideoThumbnailsViewModel
 import com.rofiq.launcherly.features.guided_settings.view.GuidedStepLayout
 
 @Composable
@@ -114,6 +118,7 @@ fun BackgroundGrid(
     var focusedIndex by remember { mutableIntStateOf(0) }
     val focusRequesters = remember { backgrounds.map { FocusRequester() } }
 
+
     LaunchedEffect(Unit) {
         focusRequesters.firstOrNull()?.requestFocus()
     }
@@ -150,8 +155,21 @@ fun BackgroundCard(
     focusRequester: FocusRequester,
     onFocusChanged: (Boolean) -> Unit,
     onSelected: () -> Unit,
-    onBack: () -> Unit
+    onBack: () -> Unit,
 ) {
+    val generateVideoThumbVM: GenerateVideoThumbnailsViewModel = hiltViewModel(
+        key = background.resourcePath
+    )
+    
+    // Generate thumbnail for this specific video when the card is first composed
+    LaunchedEffect(background) {
+        if (background.type == BackgroundType.VIDEO) {
+            generateVideoThumbVM.generateThumbnailForVideo(background.resourcePath)
+        }
+    }
+    
+    val generateThumbState = generateVideoThumbVM.generateVideoThumbState.collectAsState()
+
     Card(
         modifier = Modifier
             .aspectRatio(16f / 9f)
@@ -208,12 +226,24 @@ fun BackgroundCard(
                             .background(TVColors.Surface),
                         contentAlignment = Alignment.Center
                     ) {
-                        Icon(
-                            imageVector = Icons.Default.VideoLibrary,
-                            contentDescription = "Video",
-                            tint = TVColors.OnSurface,
-                            modifier = Modifier.size(32.dp)
-                        )
+                        val thumbnail = generateThumbState.value
+                        if (thumbnail != null) {
+                            Image(
+                                bitmap = thumbnail.asImageBitmap(),
+                                contentDescription = background.name,
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .clip(RoundedCornerShape(12.dp)),
+                                contentScale = ContentScale.Crop
+                            )
+                        } else {
+                            Icon(
+                                imageVector = Icons.Default.VideoLibrary,
+                                contentDescription = "Video",
+                                tint = TVColors.OnSurface,
+                                modifier = Modifier.size(32.dp)
+                            )
+                        }
                     }
                 }
             }
