@@ -12,8 +12,10 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
@@ -27,6 +29,8 @@ import androidx.media3.ui.PlayerView
 import coil.ImageLoader
 import coil.compose.AsyncImage
 import coil.request.CachePolicy
+import com.rofiq.launcherly.R
+import com.rofiq.launcherly.common.widgets.LCircularLoading
 import com.rofiq.launcherly.features.background_settings.model.BackgroundType
 import com.rofiq.launcherly.features.background_settings.view_model.BackgroundSettingsViewModel
 
@@ -135,8 +139,8 @@ fun DynamicBackground(
                 modifier = Modifier.fillMaxSize(),
                 contentScale = ContentScale.Crop,
                 // Show the last loaded image while loading new one
-                placeholder = null,
-                error = null
+                placeholder = painterResource(id = R.drawable.background_auth),
+                error = painterResource(id = R.drawable.background_auth)
             )
         }
     }

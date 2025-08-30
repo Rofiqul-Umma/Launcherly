@@ -22,35 +22,8 @@ object GoogleDriveUtils {
         }
         
         try {
-            // Parse the URL to extract query parameters
-            val uri = sharingUrl.toUri()
-            
             // Extract the file ID from different possible formats
-            val fileId = when {
-                sharingUrl.contains("/file/d/") -> {
-                    // Format: https://drive.google.com/file/d/FILE_ID/view?usp=sharing
-                    val regex = """/file/d/([^/]+)/""".toRegex()
-                    regex.find(sharingUrl)?.groupValues?.get(1)
-                }
-                sharingUrl.contains("open?id=") -> {
-                    // Format: https://drive.google.com/open?id=FILE_ID
-                    uri.getQueryParameter("id")
-                }
-                uri.getQueryParameter("id") != null -> {
-                    // Any URL with an 'id' parameter
-                    uri.getQueryParameter("id")
-                }
-                else -> {
-                    // Try to extract from path
-                    val pathSegments = uri.pathSegments
-                    val fileIndex = pathSegments.indexOf("file")
-                    if (fileIndex != -1 && pathSegments.size > fileIndex + 2 && pathSegments[fileIndex + 1] == "d") {
-                        pathSegments[fileIndex + 2]
-                    } else {
-                        null
-                    }
-                }
-            }
+            val fileId = extractFileIdFromDriveUrl(sharingUrl)
             
             // Return the direct download URL if we found a file ID
             return if (fileId != null) {
@@ -64,6 +37,53 @@ object GoogleDriveUtils {
         } catch (e: Exception) {
             Log.e(TAG, "Error parsing Google Drive URL: $sharingUrl", e)
             return sharingUrl
+        }
+    }
+    
+    /**
+     * Extracts file ID from Google Drive URL
+     */
+    fun extractFileIdFromDriveUrl(url: String): String? {
+        return try {
+            // Handle different Google Drive URL formats
+            when {
+                url.contains("/file/d/") -> {
+                    // Format: https://drive.google.com/file/d/FILE_ID/view?usp=sharing
+                    val regex = """/file/d/([^/]+)/""".toRegex()
+                    regex.find(url)?.groupValues?.get(1)
+                }
+                url.contains("open?id=") -> {
+                    // Format: https://drive.google.com/open?id=FILE_ID
+                    val uri = url.toUri()
+                    uri.getQueryParameter("id")
+                }
+                else -> {
+                    // Try general pattern matching
+                    val regex = """(?:/file/d/|id=)([a-zA-Z0-9_-]+)""".toRegex()
+                    regex.find(url)?.groupValues?.get(1)
+                }
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Error extracting file ID from URL: $url", e)
+            null
+        }
+    }
+    
+    /**
+     * Creates a thumbnail URL for a Google Drive file
+     */
+    fun createThumbnailUrl(sharingUrl: String): String? {
+        return try {
+            val fileId = extractFileIdFromDriveUrl(sharingUrl)
+            if (fileId != null) {
+                val decodedFileId = URLDecoder.decode(fileId, StandardCharsets.UTF_8.toString())
+                "https://drive.google.com/thumbnail?id=$decodedFileId&sz=s500"
+            } else {
+                null
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Error creating thumbnail URL for: $sharingUrl", e)
+            null
         }
     }
 }

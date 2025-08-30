@@ -1,5 +1,6 @@
 package com.rofiq.launcherly.features.background_settings.view
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.focusable
@@ -34,6 +35,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.KeyEventType
@@ -58,6 +60,7 @@ import com.rofiq.launcherly.features.background_settings.view_model.BackgroundSe
 import com.rofiq.launcherly.features.background_settings.view_model.BackgroundSettingsViewModel
 import com.rofiq.launcherly.features.generate_video_thumbnails.view_model.GenerateVideoThumbnailsViewModel
 import com.rofiq.launcherly.features.guided_settings.view.GuidedStepLayout
+import com.rofiq.launcherly.utils.GoogleDriveUtils
 
 @Composable
 fun BackgroundSettingsStep(
@@ -226,7 +229,7 @@ fun BackgroundCard(
                     ) {
                         val thumbnail = generateThumbState.value
                         if (thumbnail != null) {
-                            androidx.compose.foundation.Image(
+                          Image(
                                 bitmap = thumbnail.asImageBitmap(),
                                 contentDescription = background.name,
                                 modifier = Modifier
@@ -235,12 +238,36 @@ fun BackgroundCard(
                                 contentScale = ContentScale.Crop
                             )
                         } else {
-                            Icon(
-                                imageVector = Icons.Default.VideoLibrary,
-                                contentDescription = "Video",
-                                tint = TVColors.OnSurface,
-                                modifier = Modifier.size(32.dp)
-                            )
+                            // Try to load Google Drive thumbnail using Coil
+                            val thumbnailUrl = if (background.resourcePath.contains("drive.google.com")) {
+                                GoogleDriveUtils.createThumbnailUrl(background.resourcePath)
+                            } else {
+                                null
+                            }
+                            
+                            if (thumbnailUrl != null) {
+                                AsyncImage(
+                                    model = coil.request.ImageRequest.Builder(context)
+                                        .data(thumbnailUrl)
+                                        .crossfade(true)
+                                        .memoryCachePolicy(CachePolicy.ENABLED)
+                                        .diskCachePolicy(CachePolicy.ENABLED)
+                                        .build(),
+                                    contentDescription = background.name,
+                                    modifier = Modifier
+                                        .fillMaxSize()
+                                        .clip(RoundedCornerShape(12.dp)),
+                                    contentScale = ContentScale.Crop,
+                                    // Fallback to video icon if thumbnail fails
+                                )
+                            } else {
+                                Icon(
+                                    imageVector = Icons.Default.VideoLibrary,
+                                    contentDescription = "Video",
+                                    tint = TVColors.OnSurface,
+                                    modifier = Modifier.size(32.dp)
+                                )
+                            }
                         }
                     }
                 }
