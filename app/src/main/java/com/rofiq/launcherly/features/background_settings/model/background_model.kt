@@ -95,7 +95,75 @@ object BackgroundDefaults {
             sourceType = BackgroundSourceType.URL,
             resourcePath = "https://drive.google.com/file/d/1Zs4srZl5Uj-PMBoAq9KlFhb4saq42M8X/view?usp=drive_link",
             name = "Image"
+        ),
+
+        BackgroundSetting(
+            type = BackgroundType.IMAGE,
+            sourceType = BackgroundSourceType.URL,
+            resourcePath = "https://drive.google.com/file/d/18D6cP1rm85o6VKSMi10QAVhuN94oOZPl/view?usp=drive_link",
+            name = "Image"
+        ),
+
+        BackgroundSetting(
+            type = BackgroundType.IMAGE,
+            sourceType = BackgroundSourceType.URL,
+            resourcePath = "https://drive.google.com/file/d/112zdoA5hPW6NTbk_Vy23HTDi38Im0EuM/view?usp=drive_link",
+            name = "Image"
+        ),
+
+        BackgroundSetting(
+            type = BackgroundType.IMAGE,
+            sourceType = BackgroundSourceType.URL,
+            resourcePath = "https://drive.google.com/file/d/1trMTOoJny_I2kSVyh6uh21Vp_MRH3--4/view?usp=drive_link",
+            name = "Image"
+        ),
+
+        BackgroundSetting(
+            type = BackgroundType.IMAGE,
+            sourceType = BackgroundSourceType.URL,
+            resourcePath = "https://drive.google.com/file/d/19CxFqyaIaeMTtLgGlW0NhNBUDiw_ZcGc/view?usp=drive_link",
+            name = "Image"
+        ),
+
+        BackgroundSetting(
+            type = BackgroundType.IMAGE,
+            sourceType = BackgroundSourceType.URL,
+            resourcePath = "https://drive.google.com/file/d/1MsCWYFhjSkp89-gzUTFfZaCpfqLIzMtF/view?usp=drive_link",
+            name = "Image"
+        ),
+        BackgroundSetting(
+            type = BackgroundType.IMAGE,
+            sourceType = BackgroundSourceType.URL,
+            resourcePath = "https://drive.google.com/file/d/1Qe3pEnJ5dWOvqFUxa_B8esJRemvd_DbW/view?usp=drive_link",
+            name = "Image"
+        ),
+
+        BackgroundSetting(
+            type = BackgroundType.IMAGE,
+            sourceType = BackgroundSourceType.URL,
+            resourcePath = "https://drive.google.com/file/d/1Dtvwxzi0ZYuF78JYx9u6GV_-g_a7v0Tq/view?usp=drive_link",
+            name = "Image"
+        ),
+
+        BackgroundSetting(
+            type = BackgroundType.IMAGE,
+            sourceType = BackgroundSourceType.URL,
+            resourcePath = "https://drive.google.com/file/d/1whkaUZgAwiAnrPqq-JhIEu0wDj5Dudc-/view?usp=drive_link",
+            name = "Image"
+        ),
+
+        BackgroundSetting(
+            type = BackgroundType.IMAGE,
+            sourceType = BackgroundSourceType.URL,
+            resourcePath = "https://drive.google.com/file/d/1JKf7cxO89ZQsoTten6cnnQOZH6pcN-rk/view?usp=drive_link",
+            name = "Image"
         )
+
+
+
+
+
+
 
 
 
