@@ -60,7 +60,6 @@ import com.rofiq.launcherly.features.auth.view_model.AuthViewModel
 
 @Composable
 fun LoginPage(
-    navController: NavController,
     authVM: AuthViewModel = hiltViewModel(),
 ) {
     val accessCodeFieldRequester = remember { FocusRequester() }
@@ -77,19 +76,6 @@ fun LoginPage(
     }
 
     val textFieldScale by animateFloatAsState(targetValue = if (isAccessCodeFieldFocused) 1.05f else 1.0f, label = "TextField Scale")
-
-
-    LaunchedEffect(authState) {
-        when (authState) {
-            is AuthLoading -> {}
-            is AuthAuthenticated -> navController.navigate("home") {
-                popUpTo("login") { inclusive = true }
-            }
-            is AuthUnauthenticated -> snackbarHS.showSnackbar(
-                message = (authState as AuthUnauthenticated).message
-            )
-        }
-    }
 
     Scaffold(
         containerColor = TVColors.Background,

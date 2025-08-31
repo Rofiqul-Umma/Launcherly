@@ -16,6 +16,7 @@ import androidx.tv.material3.MaterialTheme
 import com.rofiq.launcherly.features.app_change_receiver.receiver.AppChangeReceiver
 import com.rofiq.launcherly.features.auth.view.LoginPage
 import com.rofiq.launcherly.features.background_settings.view.BackgroundSettingsStep
+import com.rofiq.launcherly.features.check_login.view.CheckLoginPage
 import com.rofiq.launcherly.features.fetch_date_time.view_model.FetchDateTimeViewModel
 import com.rofiq.launcherly.features.guided_settings.view.GuidedSettingsStep
 import com.rofiq.launcherly.features.home.view.HomePage
@@ -35,8 +36,9 @@ class MainActivity : ComponentActivity() {
         setContent {
             MaterialTheme {
                 val navController = rememberNavController()
-                NavHost(navController = navController, startDestination = "login") {
-                    composable("login") { LoginPage(navController) }
+                NavHost(navController = navController, startDestination = "check_login") {
+                    composable("check_login") { CheckLoginPage(navController) }
+                    composable("login") { LoginPage() }
                     composable("home") { HomePage(navController) }
                     composable("guided_settings") {
                         GuidedSettingsStep(

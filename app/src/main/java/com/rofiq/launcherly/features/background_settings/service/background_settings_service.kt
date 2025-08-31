@@ -20,35 +20,36 @@ class BackgroundSettingsService @Inject constructor(
         private const val KEY_BACKGROUND_NAME = "background_name"
     }
 
-    fun getCurrentBackground(): BackgroundSetting {
-        // Check if any background settings exist
-        val hasBackgroundType = sharedPrefsHelper.contains(KEY_BACKGROUND_TYPE)
+    suspend fun getCurrentBackground(): BackgroundSetting {
+         return withContext(Dispatchers.IO){
+            // Check if any background settings exist
+            val hasBackgroundType = sharedPrefsHelper.contains(KEY_BACKGROUND_TYPE)
 
-        // If no background has been set, return the first default video background
-        if (!hasBackgroundType) {
-            return BackgroundDefaults.defaultVideoBackgrounds.first()
+            // If no background has been set, return the first default video background
+            if (!hasBackgroundType) {
+                return@withContext BackgroundDefaults.defaultVideoBackgrounds.first()
+            }
+
+            // Otherwise, retrieve the saved background settings
+            val typeStr = sharedPrefsHelper.getString(KEY_BACKGROUND_TYPE, BackgroundType.VIDEO.name)
+            val sourceTypeStr =
+                sharedPrefsHelper.getString(KEY_BACKGROUND_SOURCE_TYPE, BackgroundSourceType.URL.name)
+            val path = sharedPrefsHelper.getString(
+                KEY_BACKGROUND_PATH,
+                BackgroundDefaults.defaultVideoBackgrounds.first().resourcePath
+            )
+            val name = sharedPrefsHelper.getString(
+                KEY_BACKGROUND_NAME,
+                BackgroundDefaults.defaultVideoBackgrounds.first().name
+            )
+
+            return@withContext BackgroundSetting(
+                type = BackgroundType.valueOf(typeStr),
+                sourceType = BackgroundSourceType.valueOf(sourceTypeStr),
+                resourcePath = path,
+                name = name
+            )
         }
-
-        // Otherwise, retrieve the saved background settings
-        val typeStr = sharedPrefsHelper.getString(KEY_BACKGROUND_TYPE, BackgroundType.VIDEO.name)
-        val sourceTypeStr =
-            sharedPrefsHelper.getString(KEY_BACKGROUND_SOURCE_TYPE, BackgroundSourceType.URL.name)
-        val path = sharedPrefsHelper.getString(
-            KEY_BACKGROUND_PATH,
-            BackgroundDefaults.defaultVideoBackgrounds.first().resourcePath
-        )
-        val name = sharedPrefsHelper.getString(
-            KEY_BACKGROUND_NAME,
-            BackgroundDefaults.defaultVideoBackgrounds.first().name
-        )
-
-        return BackgroundSetting(
-            type = BackgroundType.valueOf(typeStr),
-            sourceType = BackgroundSourceType.valueOf(sourceTypeStr),
-            resourcePath = path,
-            name = name
-        )
-
     }
 
     suspend fun setBackground(backgroundSetting: BackgroundSetting) {
