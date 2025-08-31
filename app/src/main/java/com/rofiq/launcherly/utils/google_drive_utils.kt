@@ -1,6 +1,5 @@
 package com.rofiq.launcherly.utils
 
-import android.net.Uri
 import android.util.Log
 import java.net.URLDecoder
 import java.nio.charset.StandardCharsets

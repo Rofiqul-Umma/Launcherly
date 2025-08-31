@@ -17,7 +17,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Wallpaper
 import androidx.compose.material3.Card
@@ -28,7 +27,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -59,7 +57,6 @@ data class SettingsItem(
 
 @Composable
 fun GuidedSettingsStep(
-    onBack: () -> Unit,
     deviceManagerVM: DeviceManagerViewModel = hiltViewModel(),
     navController: NavController
 ) {
@@ -83,8 +80,7 @@ fun GuidedSettingsStep(
         description = "Choose a setting to configure",
     ) {
         SettingsButtonList(
-            items = settingsItems,
-            onBack = onBack
+            items = settingsItems
         )
     }
 }
@@ -137,8 +133,7 @@ fun GuidedStepLayout(
 
 @Composable
 fun SettingsButtonList(
-    items: List<SettingsItem>,
-    onBack: () -> Unit
+    items: List<SettingsItem>
 ) {
     var focusedIndex by remember { mutableIntStateOf(0) }
     val focusRequesters = remember { items.map { FocusRequester() } }
@@ -170,7 +165,6 @@ fun SettingsButtonList(
                         focusRequesters[index + 1].requestFocus()
                     }
                 },
-                onBack = onBack
             )
         }
     }
@@ -184,7 +178,6 @@ fun SettingsButton(
     onFocusChanged: (Boolean) -> Unit,
     onNavigateUp: () -> Unit,
     onNavigateDown: () -> Unit,
-    onBack: () -> Unit
 ) {
     Card(
         modifier = Modifier
@@ -251,48 +244,6 @@ fun SettingsButton(
                     style = TVTypography.BodyRegular.copy(color = TVColors.OnSurfaceVariant)
                 )
             }
-        }
-    }
-}
-
-@Composable
-fun BackButton(
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    val focusRequester = remember { FocusRequester() }
-    var isFocused by remember { mutableStateOf(false) }
-
-    Card(
-        modifier = modifier
-            .size(56.dp)
-            .focusRequester(focusRequester)
-            .onFocusChanged { isFocused = it.isFocused }
-            .focusable()
-            .onKeyEvent { keyEvent ->
-                if (keyEvent.key == Key.DirectionCenter && keyEvent.type == KeyEventType.KeyUp) {
-                    onClick()
-                    true
-                } else false
-            },
-        colors = CardDefaults.cardColors(
-            containerColor = if (isFocused)
-                TVColors.OnSurfaceSecondary.copy(alpha = 0.5f)
-            else
-                TVColors.Surface.copy(alpha = 0.7f)
-        ),
-        shape = RoundedCornerShape(28.dp)
-    ) {
-        Box(
-            modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(
-                imageVector = Icons.Default.ArrowBack,
-                contentDescription = "Back",
-                tint = TVColors.OnSurface,
-                modifier = Modifier.size(24.dp)
-            )
         }
     }
 }

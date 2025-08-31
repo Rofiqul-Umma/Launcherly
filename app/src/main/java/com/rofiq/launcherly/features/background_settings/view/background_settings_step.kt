@@ -64,7 +64,6 @@ import com.rofiq.launcherly.utils.GoogleDriveUtils
 
 @Composable
 fun BackgroundSettingsStep(
-    onBack: () -> Unit,
     navController: NavController,
     backgroundVM: BackgroundSettingsViewModel = hiltViewModel()
 ) {
@@ -95,7 +94,6 @@ fun BackgroundSettingsStep(
                             popUpTo("background_settings") { inclusive = true }
                         }
                     },
-                    onBack = onBack
                 )
             }
 
@@ -119,7 +117,6 @@ fun BackgroundGrid(
     backgrounds: List<BackgroundSetting>,
     currentBackground: BackgroundSetting,
     onBackgroundSelected: (BackgroundSetting) -> Unit,
-    onBack: () -> Unit
 ) {
     var focusedIndex by remember { mutableIntStateOf(0) }
     val focusRequesters = remember { backgrounds.map { FocusRequester() } }
@@ -147,7 +144,6 @@ fun BackgroundGrid(
                     if (focused) focusedIndex = index
                 },
                 onSelected = { onBackgroundSelected(background) },
-                onBack = onBack
             )
         }
     }
@@ -161,7 +157,6 @@ fun BackgroundCard(
     focusRequester: FocusRequester,
     onFocusChanged: (Boolean) -> Unit,
     onSelected: () -> Unit,
-    onBack: () -> Unit,
 ) {
     val generateVideoThumbVM: GenerateVideoThumbnailsViewModel = hiltViewModel(
         key = background.resourcePath

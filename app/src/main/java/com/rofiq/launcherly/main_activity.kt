@@ -33,21 +33,20 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         setContent {
-            MaterialTheme { // Apply MaterialTheme to the entire navigation structure
+            MaterialTheme {
                 val navController = rememberNavController()
                 NavHost(navController = navController, startDestination = "login") {
                     composable("login") { LoginPage(navController) }
-                    composable("home")  { HomePage(navController) }
-                    composable("guided_settings") { 
+                    composable("home") { HomePage(navController) }
+                    composable("guided_settings") {
                         GuidedSettingsStep(
-                            onBack = { navController.popBackStack() }, 
                             navController = navController
-                        ) 
+                        )
                     }
-                    composable("background_settings") { 
+                    composable("background_settings") {
                         BackgroundSettingsStep(
-                            onBack = { navController.popBackStack() }, navController
-                        ) 
+                            navController
+                        )
                     }
                 }
             }
