@@ -10,9 +10,6 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -31,8 +28,8 @@ import coil.request.ImageRequest
 import coil.size.Scale
 import com.rofiq.launcherly.R
 import com.rofiq.launcherly.features.background_settings.model.BackgroundType
-import com.rofiq.launcherly.features.background_settings.view_model.BackgroundSettingsViewModel
 import com.rofiq.launcherly.features.background_settings.view_model.BackgroundSettingsLoaded
+import com.rofiq.launcherly.features.background_settings.view_model.BackgroundSettingsViewModel
 import com.rofiq.launcherly.utils.GoogleDriveUtils
 
 @OptIn(UnstableApi::class)
@@ -53,9 +50,6 @@ fun DynamicBackground(
         else -> null
     }
 
-    // Keep track of player initialization state
-    var isPlayerInitializing by remember { mutableStateOf(false) }
-
     LaunchedEffect(currentBackground, context) {
         currentBackground?.let { background ->
             if (background.type == BackgroundType.VIDEO) {
@@ -65,9 +59,7 @@ fun DynamicBackground(
                     background.resourcePath
                 }
                 if (videoUrl.isNotBlank()) {
-                    isPlayerInitializing = true
                     backgroundVM.initializePlayer(context, videoUrl)
-                    isPlayerInitializing = false
                 }
             }
         }

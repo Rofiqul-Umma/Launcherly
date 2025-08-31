@@ -38,7 +38,7 @@ class MainActivity : ComponentActivity() {
                 val navController = rememberNavController()
                 NavHost(navController = navController, startDestination = "check_login") {
                     composable("check_login") { CheckLoginPage(navController) }
-                    composable("login") { LoginPage() }
+                    composable("login") { LoginPage(navController = navController) }
                     composable("home") { HomePage(navController) }
                     composable("guided_settings") {
                         GuidedSettingsStep(
