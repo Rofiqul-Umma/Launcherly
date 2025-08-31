@@ -2,7 +2,7 @@ package com.rofiq.launcherly.features.background_settings.view
 
 import android.content.Context
 import androidx.annotation.OptIn
-import androidx.compose.foundation.Image // Import Image
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
@@ -10,6 +10,9 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -29,7 +32,7 @@ import coil.size.Scale
 import com.rofiq.launcherly.R
 import com.rofiq.launcherly.features.background_settings.model.BackgroundType
 import com.rofiq.launcherly.features.background_settings.view_model.BackgroundSettingsViewModel
-import com.rofiq.launcherly.features.background_settings.view_model.BackgroundSettingsLoaded // Ensure this state is imported
+import com.rofiq.launcherly.features.background_settings.view_model.BackgroundSettingsLoaded
 import com.rofiq.launcherly.utils.GoogleDriveUtils
 
 @OptIn(UnstableApi::class)
@@ -37,41 +40,64 @@ import com.rofiq.launcherly.utils.GoogleDriveUtils
 fun DynamicBackground(
     backgroundVM: BackgroundSettingsViewModel = hiltViewModel()
 ) {
-    val context = LocalContext.current.applicationContext // Use application context
+    val context = LocalContext.current.applicationContext
     val lifecycleOwner = LocalLifecycleOwner.current
-    val backgroundSettingsState by backgroundVM.backgroundSettingsState.collectAsState() // Observe state
+    val backgroundSettingsState by backgroundVM.backgroundSettingsState.collectAsState()
 
     // Observe the ExoPlayer instance from the ViewModel
     val exoPlayer by backgroundVM.exoPlayer.collectAsState()
 
     // Determine the current background to display
-    val currentBackground = (backgroundSettingsState as BackgroundSettingsLoaded).currentBackground
+    val currentBackground = when (backgroundSettingsState) {
+        is BackgroundSettingsLoaded -> (backgroundSettingsState as BackgroundSettingsLoaded).currentBackground
+        else -> null
+    }
 
+    // Keep track of player initialization state
+    var isPlayerInitializing by remember { mutableStateOf(false) }
 
     LaunchedEffect(currentBackground, context) {
-        if (currentBackground.type == BackgroundType.VIDEO) {
-            val videoUrl = if (currentBackground.sourceType == com.rofiq.launcherly.features.background_settings.model.BackgroundSourceType.URL) {
-                GoogleDriveUtils.convertSharingUrlToDownloadUrl(currentBackground.resourcePath)
-            } else {
-                currentBackground.resourcePath
+        currentBackground?.let { background ->
+            if (background.type == BackgroundType.VIDEO) {
+                val videoUrl = if (background.sourceType == com.rofiq.launcherly.features.background_settings.model.BackgroundSourceType.URL) {
+                    GoogleDriveUtils.convertSharingUrlToDownloadUrl(background.resourcePath)
+                } else {
+                    background.resourcePath
+                }
+                if (videoUrl.isNotBlank()) {
+                    isPlayerInitializing = true
+                    backgroundVM.initializePlayer(context, videoUrl)
+                    isPlayerInitializing = false
+                }
             }
-            if (videoUrl.isNotBlank()) {
-                backgroundVM.initializePlayer(context, videoUrl)
-            }
-        } else {
-            backgroundVM.releasePlayer()
         }
     }
 
-    DisposableEffect(lifecycleOwner, backgroundVM, currentBackground) { // Added currentBackground as a key
+    DisposableEffect(lifecycleOwner, backgroundVM, currentBackground) {
         val observer = LifecycleEventObserver { _, event ->
             when (event) {
                 Lifecycle.Event.ON_RESUME -> {
-                    if (currentBackground.type == BackgroundType.VIDEO) {
-                        backgroundVM.playPlayer()
+                    currentBackground?.let { background ->
+                        if (background.type == BackgroundType.VIDEO) {
+                            // Ensure player is initialized and playing when resuming
+                            val videoUrl = if (background.sourceType == com.rofiq.launcherly.features.background_settings.model.BackgroundSourceType.URL) {
+                                GoogleDriveUtils.convertSharingUrlToDownloadUrl(background.resourcePath)
+                            } else {
+                                background.resourcePath
+                            }
+                            if (videoUrl.isNotBlank()) {
+                                backgroundVM.initializePlayer(context, videoUrl)
+                                backgroundVM.playPlayer()
+                            }
+                        }
                     }
                 }
                 Lifecycle.Event.ON_PAUSE -> {
+                    // Don't pause the player immediately to maintain the last frame
+                    // backgroundVM.pausePlayer()
+                }
+                Lifecycle.Event.ON_STOP -> {
+                    // Only pause when the app is fully stopped
                     backgroundVM.pausePlayer()
                 }
                 Lifecycle.Event.ON_DESTROY -> {
@@ -83,24 +109,26 @@ fun DynamicBackground(
         lifecycleOwner.lifecycle.addObserver(observer)
         onDispose {
             lifecycleOwner.lifecycle.removeObserver(observer)
-            backgroundVM.pausePlayer() // Pause when composable is disposed
         }
     }
 
-    when (currentBackground.type) {
-        BackgroundType.VIDEO -> {
-            exoPlayer?.let { player ->
-                if (!player.isReleased) {
-                    Box(modifier = Modifier.fillMaxSize()) {
-                        AndroidView(
-                            factory = { ctx ->
-                                PlayerView(ctx).apply {
+    currentBackground?.let { background ->
+        when (background.type) {
+            BackgroundType.VIDEO -> {
+                // Always show the player view, even if player is null (to avoid black screen)
+                Box(modifier = Modifier.fillMaxSize()) {
+                    AndroidView(
+                        factory = { ctx ->
+                            PlayerView(ctx).apply {
+                                exoPlayer?.let { player ->
                                     this.player = player
-                                    useController = false
-                                    resizeMode = AspectRatioFrameLayout.RESIZE_MODE_ZOOM
                                 }
-                            },
-                            update = { playerView ->
+                                useController = false
+                                resizeMode = AspectRatioFrameLayout.RESIZE_MODE_ZOOM
+                            }
+                        },
+                        update = { playerView ->
+                            exoPlayer?.let { player ->
                                 if (playerView.player != player) {
                                     playerView.player = player
                                 }
@@ -109,34 +137,38 @@ fun DynamicBackground(
                                 if (player.playWhenReady != shouldPlay) {
                                      player.playWhenReady = shouldPlay
                                 }
-                            },
-                            modifier = Modifier.fillMaxSize()
-                        )
-                    }
-                } else {
-                    ShowImagePlaceholder(context, "Video player was released, showing placeholder.")
+                            }
+                        },
+                        modifier = Modifier.fillMaxSize()
+                    )
                 }
-            } ?: run {
-                ShowImagePlaceholder(context, "Video player not available, showing placeholder.")
+            }
+
+            BackgroundType.IMAGE -> {
+                AsyncImage(
+                    model = ImageRequest.Builder(context)
+                        .data(background.directUrl)
+                        .crossfade(true)
+                        .memoryCachePolicy(CachePolicy.ENABLED)
+                        .diskCachePolicy(CachePolicy.ENABLED)
+                        .scale(Scale.FIT)
+                        .build(),
+                    contentDescription = "Background Image",
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = ContentScale.Crop,
+                    placeholder = painterResource(id = R.drawable.background_auth),
+                    error = painterResource(id = R.drawable.background_auth)
+                )
             }
         }
-
-        BackgroundType.IMAGE -> {
-            AsyncImage(
-                model = ImageRequest.Builder(context)
-                    .data(currentBackground.directUrl)
-                    .crossfade(true)
-                    .memoryCachePolicy(CachePolicy.ENABLED)
-                    .diskCachePolicy(CachePolicy.ENABLED)
-                    .scale(Scale.FIT)
-                    .build(),
-                contentDescription = "Background Image",
-                modifier = Modifier.fillMaxSize(),
-                contentScale = ContentScale.Crop,
-                placeholder = painterResource(id = R.drawable.background_auth),
-                error = painterResource(id = R.drawable.background_auth)
-            )
-        }
+    } ?: run {
+        // Fallback to default background if currentBackground is null
+        Image(
+            painter = painterResource(id = R.drawable.background_auth),
+            contentDescription = "Default Background",
+            modifier = Modifier.fillMaxSize(),
+            contentScale = ContentScale.Crop
+        )
     }
 }
 

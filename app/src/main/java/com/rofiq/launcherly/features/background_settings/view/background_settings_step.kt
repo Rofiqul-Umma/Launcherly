@@ -47,6 +47,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import coil.request.CachePolicy
 import com.rofiq.launcherly.common.color.TVColors
@@ -64,6 +65,7 @@ import com.rofiq.launcherly.utils.GoogleDriveUtils
 @Composable
 fun BackgroundSettingsStep(
     onBack: () -> Unit,
+    navController: NavController,
     backgroundVM: BackgroundSettingsViewModel = hiltViewModel()
 ) {
     val backgroundState by backgroundVM.backgroundSettingsState.collectAsState()
@@ -87,7 +89,12 @@ fun BackgroundSettingsStep(
                 BackgroundGrid(
                     backgrounds = (backgroundState as BackgroundSettingsLoaded).availableBackgrounds,
                     currentBackground = (backgroundState as BackgroundSettingsLoaded).currentBackground,
-                    onBackgroundSelected = { backgroundVM.setBackground(it, context) },
+                    onBackgroundSelected = { 
+                        backgroundVM.setBackground(it, context)
+                        navController.navigate("home") {
+                            popUpTo("background_settings") { inclusive = true }
+                        }
+                    },
                     onBack = onBack
                 )
             }
@@ -183,9 +190,6 @@ fun BackgroundCard(
             .onKeyEvent { keyEvent ->
                 if ((keyEvent.key == Key.DirectionCenter || keyEvent.key == Key.Enter) && keyEvent.type == KeyEventType.KeyUp) {
                     onSelected()
-                    true
-                } else if (keyEvent.key == Key.Back && keyEvent.type == KeyEventType.KeyUp) {
-                    onBack()
                     true
                 } else false
             },

@@ -35,6 +35,7 @@ class BackgroundSettingsViewModel @Inject constructor(
     val exoPlayer: StateFlow<ExoPlayer?> = _exoPlayer.asStateFlow()
 
     private var currentPlayerUrl: String? = null
+    private var appContext: Context? = null
 
     init {
         loadBackgroundSettings()
@@ -54,16 +55,24 @@ class BackgroundSettingsViewModel @Inject constructor(
                 val availableBackgrounds = backgroundSettingsService.getAvailableBackgrounds()
                 val currentBackground = backgroundSettingsService.getCurrentBackground()
 
-                if (currentBackground.type != BackgroundType.VIDEO) {
-                    releasePlayer()
-                }
-
                 emit(
                     BackgroundSettingsLoaded(
                         availableBackgrounds = availableBackgrounds,
                         currentBackground = currentBackground
                     )
                 )
+                
+                // Initialize player for video background if needed
+                if (currentBackground.type == BackgroundType.VIDEO) {
+                    val videoUrl = if (currentBackground.sourceType == com.rofiq.launcherly.features.background_settings.model.BackgroundSourceType.URL) {
+                        GoogleDriveUtils.convertSharingUrlToDownloadUrl(currentBackground.resourcePath)
+                    } else {
+                        currentBackground.resourcePath
+                    }
+                    if (videoUrl.isNotBlank() && appContext != null) {
+                        initializePlayer(appContext!!, videoUrl)
+                    }
+                }
             } catch (e: Exception) {
                 emit(BackgroundSettingsError(e.message ?: "Error loading background settings"))
             }
@@ -74,6 +83,16 @@ class BackgroundSettingsViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 backgroundSettingsService.setBackground(backgroundSetting)
+                
+                // Update the state with the new background
+                val availableBackgrounds = (_backgroundSettingsState.value as? BackgroundSettingsLoaded)?.availableBackgrounds ?: emptyList()
+                val newState = BackgroundSettingsLoaded(
+                    availableBackgrounds = availableBackgrounds,
+                    currentBackground = backgroundSetting
+                )
+                emit(newState)
+                
+                // Handle player initialization/switching based on new background type
                 if (backgroundSetting.type == BackgroundType.VIDEO) {
                     val videoUrl = if (backgroundSetting.sourceType == com.rofiq.launcherly.features.background_settings.model.BackgroundSourceType.URL) {
                         GoogleDriveUtils.convertSharingUrlToDownloadUrl(backgroundSetting.resourcePath)
@@ -82,15 +101,9 @@ class BackgroundSettingsViewModel @Inject constructor(
                     }
                     initializePlayer(context.applicationContext, videoUrl)
                 } else {
-                    releasePlayer()
+                    // For non-video backgrounds, pause the player but don't release it
+                    _exoPlayer.value?.playWhenReady = false
                 }
-                 val currentBg = backgroundSettingsService.getCurrentBackground()
-                 val availableBackgrounds = (_backgroundSettingsState.value as? BackgroundSettingsLoaded)?.availableBackgrounds ?: emptyList()
-                _backgroundSettingsState.value = BackgroundSettingsLoaded(
-                    availableBackgrounds = availableBackgrounds,
-                    currentBackground = currentBg
-                )
-
             } catch (e: Exception) {
                 emit(BackgroundSettingsError(e.message ?: "Error setting background"))
             }
@@ -99,45 +112,59 @@ class BackgroundSettingsViewModel @Inject constructor(
 
     @OptIn(UnstableApi::class)
     fun initializePlayer(context: Context, videoUrl: String) {
-        // Ensure context is application context
-        val appContext = context.applicationContext
+        // Store application context for later use
+        if (appContext == null) {
+            appContext = context.applicationContext
+        }
 
+        // If player already exists and is for the same URL and not released, just resume it
         if (_exoPlayer.value != null && currentPlayerUrl == videoUrl && !_exoPlayer.value!!.isReleased) {
-            // Player already initialized with the same URL and not released
-            _exoPlayer.value?.playWhenReady = true // Ensure it's set to play
+            _exoPlayer.value?.playWhenReady = true
             return
         }
 
-        releasePlayer() // Release any existing player first
-
-        currentPlayerUrl = videoUrl
-        val player = ExoPlayer.Builder(appContext).build().apply {
-            val mediaItem = MediaItem.fromUri(videoUrl.toUri())
-            setMediaItem(mediaItem)
-            repeatMode = Player.REPEAT_MODE_ONE
-            // Use the correct constant from androidx.media3.common.C
-            videoScalingMode = androidx.media3.common.C.VIDEO_SCALING_MODE_SCALE_TO_FIT_WITH_CROPPING
-            playWhenReady = true
-
-            addListener(object : Player.Listener {
-                override fun onPlayerError(error: PlaybackException) {
-                  Log.e("BackgroundVM_ExoPlayer", "Player error: ${error.message}", error)
-                    currentPlayerUrl = null // Invalidate current URL on error to allow re-initialization
+        // If we're switching to a different video URL or the player is released, we need a new player
+        if ((_exoPlayer.value != null && (currentPlayerUrl != videoUrl || _exoPlayer.value!!.isReleased))) {
+            // Release the old player
+            _exoPlayer.value?.let {
+                if (!it.isReleased) {
+                    it.release()
                 }
-
-                override fun onPlaybackStateChanged(playbackState: Int) {
-                    if (playbackState == Player.STATE_READY) {
-                        Log.d("BackgroundVM_ExoPlayer", "Player is ready and will play when ready.")
-                    }
-                }
-            })
-            prepare()
+            }
+            _exoPlayer.value = null
         }
-        _exoPlayer.value = player
+
+        // Create new player only if needed
+        if (_exoPlayer.value == null) {
+            currentPlayerUrl = videoUrl
+            val player = ExoPlayer.Builder(context.applicationContext).build().apply {
+                val mediaItem = MediaItem.fromUri(videoUrl.toUri())
+                setMediaItem(mediaItem)
+                repeatMode = Player.REPEAT_MODE_ONE
+                videoScalingMode = androidx.media3.common.C.VIDEO_SCALING_MODE_SCALE_TO_FIT_WITH_CROPPING
+                playWhenReady = true
+
+                addListener(object : Player.Listener {
+                    override fun onPlayerError(error: PlaybackException) {
+                      Log.e("BackgroundVM_ExoPlayer", "Player error: ${error.message}", error)
+                        currentPlayerUrl = null
+                    }
+
+                    override fun onPlaybackStateChanged(playbackState: Int) {
+                        if (playbackState == Player.STATE_READY) {
+                            Log.d("BackgroundVM_ExoPlayer", "Player is ready and will play when ready.")
+                        }
+                    }
+                })
+                prepare()
+            }
+            _exoPlayer.value = player
+        }
     }
 
     @OptIn(UnstableApi::class)
     fun releasePlayer() {
+        // Only release if we're changing contexts or the ViewModel is being cleared
         _exoPlayer.value?.let {
             if (!it.isReleased) {
                 it.release()

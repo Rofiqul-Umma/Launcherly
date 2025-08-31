@@ -37,14 +37,17 @@ class MainActivity : ComponentActivity() {
                 val navController = rememberNavController()
                 NavHost(navController = navController, startDestination = "login") {
                     composable("login") { LoginPage(navController) }
-                    composable("home")  {
-                        HomePage(navController)
+                    composable("home")  { HomePage(navController) }
+                    composable("guided_settings") { 
+                        GuidedSettingsStep(
+                            onBack = { navController.popBackStack() }, 
+                            navController = navController
+                        ) 
                     }
-                    composable("guided_settings") {
-                        GuidedSettingsStep(onBack = { navController.popBackStack() }, navController = navController)
-                    }
-                    composable("background_settings") {
-                        BackgroundSettingsStep(onBack = { navController.navigate("home") })
+                    composable("background_settings") { 
+                        BackgroundSettingsStep(
+                            onBack = { navController.popBackStack() }, navController
+                        ) 
                     }
                 }
             }

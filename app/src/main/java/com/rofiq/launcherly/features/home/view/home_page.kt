@@ -41,6 +41,7 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.media3.common.util.UnstableApi
 import androidx.navigation.NavController
+import androidx.tv.material3.ExperimentalTvMaterial3Api
 import com.rofiq.launcherly.common.color.TVColors
 import com.rofiq.launcherly.common.text_style.TVTypography
 import com.rofiq.launcherly.common.widgets.LCircularLoading
@@ -53,15 +54,14 @@ import com.rofiq.launcherly.features.fetch_date_time.view_model.FetchDateTimeSuc
 import com.rofiq.launcherly.features.fetch_date_time.view_model.FetchDateTimeViewModel
 import com.rofiq.launcherly.features.home.view.component.ListApps
 
-@OptIn(UnstableApi::class)
+@OptIn(UnstableApi::class, ExperimentalTvMaterial3Api::class)
 @Composable
 fun HomePage(
     navController: NavController,
-    dateTimeVM: FetchDateTimeViewModel = hiltViewModel(),
-    checkInternetVM: CheckInternetViewModel = hiltViewModel(),
-    deviceManagerVM: DeviceManagerViewModel = hiltViewModel()
 ) {
-
+    val dateTimeVM: FetchDateTimeViewModel = hiltViewModel()
+    val checkInternetVM: CheckInternetViewModel = hiltViewModel()
+    val deviceManagerVM: DeviceManagerViewModel = hiltViewModel()
 
     val fetchDateTimeState = dateTimeVM.fetchDateTimeState.collectAsState()
     val checkInternetState = checkInternetVM.checkInternetState.collectAsState()

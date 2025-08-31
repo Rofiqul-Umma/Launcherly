@@ -74,7 +74,7 @@ fun GuidedSettingsStep(
             title = "Background Settings",
             description = "Change wallpaper and background",
             icon = Icons.Default.Wallpaper,
-            action = { navController.navigate("background_settings") } // You can change this to background settings
+            action = { navController.navigate("background_settings") }
         )
     )
 
@@ -84,7 +84,7 @@ fun GuidedSettingsStep(
     ) {
         SettingsButtonList(
             items = settingsItems,
-            onBack = {navController.navigate("home")}
+            onBack = onBack
         )
     }
 }
@@ -208,11 +208,6 @@ fun SettingsButton(
 
                         Key.DirectionDown -> {
                             onNavigateDown()
-                            true
-                        }
-
-                        Key.Back -> {
-                            onBack()
                             true
                         }
 
