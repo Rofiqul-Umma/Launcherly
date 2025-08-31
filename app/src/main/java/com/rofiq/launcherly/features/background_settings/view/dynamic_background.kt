@@ -11,8 +11,10 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.viewinterop.AndroidView
@@ -39,6 +41,7 @@ import com.rofiq.launcherly.utils.GoogleDriveUtils
 fun DynamicBackground(
     backgroundVM: BackgroundSettingsViewModel = hiltViewModel()
 ) {
+    val scope = rememberCoroutineScope()
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
     val currentBackground = backgroundVM.getCurrentBackground()
@@ -122,6 +125,7 @@ fun DynamicBackground(
                     .build(),
                 contentDescription = "Background Image",
                 modifier = Modifier.fillMaxSize(),
+                contentScale = ContentScale.Crop,
                 // Show the last loaded image while loading new one
                 placeholder = painterResource(id = R.drawable.background_auth),
                 error = painterResource(id = R.drawable.background_auth)

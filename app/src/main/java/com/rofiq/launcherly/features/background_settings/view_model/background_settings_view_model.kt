@@ -17,10 +17,8 @@ class BackgroundSettingsViewModel @Inject constructor(
     private val backgroundSettingsService: BackgroundSettingsService
 ) : ViewModel() {
 
-    private val _backgroundSettingsState =
-        MutableStateFlow<BackgroundSettingsState>(BackgroundSettingsInitial)
-    val backgroundSettingsState: StateFlow<BackgroundSettingsState> =
-        _backgroundSettingsState.asStateFlow()
+    private val _backgroundSettingsState = MutableStateFlow<BackgroundSettingsState>(BackgroundSettingsInitial)
+    val backgroundSettingsState: StateFlow<BackgroundSettingsState> = _backgroundSettingsState.asStateFlow()
 
     init {
         loadBackgroundSettings()
@@ -35,7 +33,7 @@ class BackgroundSettingsViewModel @Inject constructor(
     private fun loadBackgroundSettings() {
         viewModelScope.launch {
             try {
-                emit(BackgroundSettingsLoading)
+               emit(BackgroundSettingsLoading)
 
                 val availableBackgrounds = backgroundSettingsService.getAvailableBackgrounds()
                 val currentBackground = backgroundSettingsService.getCurrentBackground()
@@ -47,11 +45,7 @@ class BackgroundSettingsViewModel @Inject constructor(
                     )
                 )
             } catch (e: Exception) {
-                android.util.Log.e(
-                    "BackgroundSettingsViewModel",
-                    "Error loading background settings",
-                    e
-                )
+                android.util.Log.e("BackgroundSettingsViewModel", "Error loading background settings", e)
                 emit(BackgroundSettingsError(e.message ?: "Error loading background settings"))
             }
         }
@@ -63,7 +57,7 @@ class BackgroundSettingsViewModel @Inject constructor(
                 backgroundSettingsService.setBackground(backgroundSetting)
                 loadBackgroundSettings()
             } catch (e: Exception) {
-                emit(BackgroundSettingsError(e.message ?: "Error setting background"))
+             emit(BackgroundSettingsError(e.message ?: "Error setting background"))
             }
         }
     }
