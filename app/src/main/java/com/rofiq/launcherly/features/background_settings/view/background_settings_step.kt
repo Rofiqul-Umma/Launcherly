@@ -49,6 +49,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
+import coil.compose.SubcomposeAsyncImage
 import coil.request.CachePolicy
 import com.rofiq.launcherly.common.color.TVColors
 import com.rofiq.launcherly.common.text_style.TVTypography
@@ -201,7 +202,7 @@ fun BackgroundCard(
             when (background.type) {
                 BackgroundType.IMAGE -> {
                     // Use AsyncImage for better caching and lifecycle handling
-                    AsyncImage(
+                    SubcomposeAsyncImage (
                         model = coil.request.ImageRequest.Builder(context)
                             .data(background.directUrl)
                             .crossfade(true)
@@ -209,6 +210,17 @@ fun BackgroundCard(
                             .diskCachePolicy(CachePolicy.ENABLED)
                             .build(),
                         contentDescription = background.name,
+                        loading = {
+                            Box(
+                                modifier = Modifier.fillMaxSize(),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                LCircularLoading(
+                                    size = 30,
+                                    strokeWidth = 4
+                                )
+                            }
+                        },
                         modifier = Modifier
                             .fillMaxSize()
                             .clip(RoundedCornerShape(12.dp)),
@@ -244,7 +256,7 @@ fun BackgroundCard(
                                 }
 
                             if (thumbnailUrl != null) {
-                                AsyncImage(
+                                SubcomposeAsyncImage (
                                     model = coil.request.ImageRequest.Builder(context)
                                         .data(thumbnailUrl)
                                         .crossfade(true)
@@ -252,7 +264,18 @@ fun BackgroundCard(
                                         .diskCachePolicy(CachePolicy.ENABLED)
                                         .build(),
                                     contentDescription = background.name,
-                                    modifier = Modifier // ktlint-disable no-empty-glam-lambda
+                                    loading = {
+                                        Box(
+                                            modifier = Modifier.fillMaxSize(),
+                                            contentAlignment = Alignment.Center
+                                        ) {
+                                            LCircularLoading(
+                                                size = 30,
+                                                strokeWidth = 4
+                                            )
+                                        }
+                                    },
+                                    modifier = Modifier
                                         .fillMaxSize()
                                         .clip(RoundedCornerShape(12.dp)),
                                     contentScale = ContentScale.Crop,
