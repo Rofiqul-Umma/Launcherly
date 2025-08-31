@@ -1,18 +1,15 @@
 package com.rofiq.launcherly.features.background_settings.view
 
 import android.content.Context
-import android.media.MediaCodec.VIDEO_SCALING_MODE_SCALE_TO_FIT_WITH_CROPPING
 import androidx.annotation.OptIn
+import androidx.compose.foundation.Image // Import Image
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -22,18 +19,17 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
-import androidx.media3.common.MediaItem
-import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
-import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.ui.AspectRatioFrameLayout
 import androidx.media3.ui.PlayerView
 import coil.compose.AsyncImage
 import coil.request.CachePolicy
+import coil.request.ImageRequest
 import coil.size.Scale
 import com.rofiq.launcherly.R
 import com.rofiq.launcherly.features.background_settings.model.BackgroundType
 import com.rofiq.launcherly.features.background_settings.view_model.BackgroundSettingsViewModel
+import com.rofiq.launcherly.features.background_settings.view_model.BackgroundSettingsLoaded // Ensure this state is imported
 import com.rofiq.launcherly.utils.GoogleDriveUtils
 
 @OptIn(UnstableApi::class)
@@ -41,83 +37,94 @@ import com.rofiq.launcherly.utils.GoogleDriveUtils
 fun DynamicBackground(
     backgroundVM: BackgroundSettingsViewModel = hiltViewModel()
 ) {
-    val scope = rememberCoroutineScope()
-    val context = LocalContext.current
+    val context = LocalContext.current.applicationContext // Use application context
     val lifecycleOwner = LocalLifecycleOwner.current
-    val currentBackground = backgroundVM.getCurrentBackground()
+    val backgroundSettingsState by backgroundVM.backgroundSettingsState.collectAsState() // Observe state
 
-    // Remember the last loaded background to prevent flickering
-    var lastLoadedBackground by remember { mutableStateOf(currentBackground) }
+    // Observe the ExoPlayer instance from the ViewModel
+    val exoPlayer by backgroundVM.exoPlayer.collectAsState()
 
-    // Update last loaded background when current background changes
-    LaunchedEffect(currentBackground) {
-        lastLoadedBackground = currentBackground
+    // Determine the current background to display
+    val currentBackground = (backgroundSettingsState as BackgroundSettingsLoaded).currentBackground
+
+
+    LaunchedEffect(currentBackground, context) {
+        if (currentBackground.type == BackgroundType.VIDEO) {
+            val videoUrl = if (currentBackground.sourceType == com.rofiq.launcherly.features.background_settings.model.BackgroundSourceType.URL) {
+                GoogleDriveUtils.convertSharingUrlToDownloadUrl(currentBackground.resourcePath)
+            } else {
+                currentBackground.resourcePath
+            }
+            if (videoUrl.isNotBlank()) {
+                backgroundVM.initializePlayer(context, videoUrl)
+            }
+        } else {
+            backgroundVM.releasePlayer()
+        }
     }
 
-    when (lastLoadedBackground.type) {
-        BackgroundType.VIDEO -> {
-            // Convert Google Drive URL to direct download URL for video playback
-            val videoUrl = if (lastLoadedBackground.sourceType == com.rofiq.launcherly.features.background_settings.model.BackgroundSourceType.URL) {
-                GoogleDriveUtils.convertSharingUrlToDownloadUrl(lastLoadedBackground.resourcePath)
-            } else {
-                lastLoadedBackground.resourcePath
-            }
-
-            // Use a singleton-like approach to keep the player alive across recompositions
-            val exoPlayer = rememberExoPlayer(context, videoUrl)
-
-            // Handle lifecycle events
-            DisposableEffect(lifecycleOwner, exoPlayer) {
-                val observer = LifecycleEventObserver { _, event ->
-                    when (event) {
-                        Lifecycle.Event.ON_RESUME -> {
-                            if (!exoPlayer.isReleased) {
-                                exoPlayer.playWhenReady = true
-                            }
-                        }
-                        Lifecycle.Event.ON_PAUSE -> {
-                            if (!exoPlayer.isReleased) {
-                                exoPlayer.playWhenReady = false
-                            }
-                        }
-                        Lifecycle.Event.ON_DESTROY -> {
-                            if (!exoPlayer.isReleased) {
-                                exoPlayer.release()
-                            }
-                        }
-                        else -> {}
+    DisposableEffect(lifecycleOwner, backgroundVM, currentBackground) { // Added currentBackground as a key
+        val observer = LifecycleEventObserver { _, event ->
+            when (event) {
+                Lifecycle.Event.ON_RESUME -> {
+                    if (currentBackground.type == BackgroundType.VIDEO) {
+                        backgroundVM.playPlayer()
                     }
                 }
-                lifecycleOwner.lifecycle.addObserver(observer)
-                onDispose {
-                    lifecycleOwner.lifecycle.removeObserver(observer)
+                Lifecycle.Event.ON_PAUSE -> {
+                    backgroundVM.pausePlayer()
                 }
+                Lifecycle.Event.ON_DESTROY -> {
+                    backgroundVM.pausePlayer()
+                }
+                else -> {}
             }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+            backgroundVM.pausePlayer() // Pause when composable is disposed
+        }
+    }
 
-            Box(modifier = Modifier.fillMaxSize()) {
-                AndroidView(
-                    factory = { context ->
-                        PlayerView(context).apply {
-                            player = exoPlayer
-                            useController = false
-                            resizeMode = AspectRatioFrameLayout.RESIZE_MODE_ZOOM
-                        }
-                    },
-                    update = { playerView ->
-                        if (playerView.player != exoPlayer) {
-                            playerView.player = exoPlayer
-                        }
-                    },
-                    modifier = Modifier.fillMaxSize()
-                )
+    when (currentBackground.type) {
+        BackgroundType.VIDEO -> {
+            exoPlayer?.let { player ->
+                if (!player.isReleased) {
+                    Box(modifier = Modifier.fillMaxSize()) {
+                        AndroidView(
+                            factory = { ctx ->
+                                PlayerView(ctx).apply {
+                                    this.player = player
+                                    useController = false
+                                    resizeMode = AspectRatioFrameLayout.RESIZE_MODE_ZOOM
+                                }
+                            },
+                            update = { playerView ->
+                                if (playerView.player != player) {
+                                    playerView.player = player
+                                }
+                                // Ensure player state is correct based on lifecycle
+                                val shouldPlay = lifecycleOwner.lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED)
+                                if (player.playWhenReady != shouldPlay) {
+                                     player.playWhenReady = shouldPlay
+                                }
+                            },
+                            modifier = Modifier.fillMaxSize()
+                        )
+                    }
+                } else {
+                    ShowImagePlaceholder(context, "Video player was released, showing placeholder.")
+                }
+            } ?: run {
+                ShowImagePlaceholder(context, "Video player not available, showing placeholder.")
             }
         }
 
         BackgroundType.IMAGE -> {
-            // Use AsyncImage which handles caching and lifecycle better
             AsyncImage(
-                model = coil.request.ImageRequest.Builder(context)
-                    .data(lastLoadedBackground.directUrl)
+                model = ImageRequest.Builder(context)
+                    .data(currentBackground.directUrl)
                     .crossfade(true)
                     .memoryCachePolicy(CachePolicy.ENABLED)
                     .diskCachePolicy(CachePolicy.ENABLED)
@@ -126,7 +133,6 @@ fun DynamicBackground(
                 contentDescription = "Background Image",
                 modifier = Modifier.fillMaxSize(),
                 contentScale = ContentScale.Crop,
-                // Show the last loaded image while loading new one
                 placeholder = painterResource(id = R.drawable.background_auth),
                 error = painterResource(id = R.drawable.background_auth)
             )
@@ -134,34 +140,13 @@ fun DynamicBackground(
     }
 }
 
-@OptIn(UnstableApi::class)
 @Composable
-private fun rememberExoPlayer(context: Context, videoUrl: String): ExoPlayer {
-    val exoPlayer = remember(videoUrl) {
-        ExoPlayer.Builder(context).build().apply {
-            val mediaItem = MediaItem.fromUri(videoUrl)
-            setMediaItem(mediaItem)
-            prepare()
-            playWhenReady = true
-            repeatMode = ExoPlayer.REPEAT_MODE_ONE
-            videoScalingMode = VIDEO_SCALING_MODE_SCALE_TO_FIT_WITH_CROPPING
-
-            // Add listener to handle playback errors
-            addListener(object : Player.Listener {
-                override fun onPlayerError(error: androidx.media3.common.PlaybackException) {
-                    android.util.Log.e("DynamicBackground", "Player error: ${error.message}", error)
-                }
-            })
-        }
-    }
-
-    // Ensure player is prepared when remembered
-    LaunchedEffect(exoPlayer) {
-        if (!exoPlayer.isReleased && !exoPlayer.isPlaying) {
-            exoPlayer.prepare()
-            exoPlayer.playWhenReady = true
-        }
-    }
-
-    return exoPlayer
+private fun ShowImagePlaceholder(context: Context, reason: String) {
+    // Use androidx.compose.foundation.Image for painters
+    Image(
+        painter = painterResource(id = R.drawable.background_auth),
+        contentDescription = "Placeholder Background",
+        modifier = Modifier.fillMaxSize(),
+        contentScale = ContentScale.Crop
+    )
 }

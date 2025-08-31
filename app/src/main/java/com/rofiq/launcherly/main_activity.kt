@@ -44,7 +44,7 @@ class MainActivity : ComponentActivity() {
                         GuidedSettingsStep(onBack = { navController.popBackStack() }, navController = navController)
                     }
                     composable("background_settings") {
-                        BackgroundSettingsStep(onBack = { navController.popBackStack() })
+                        BackgroundSettingsStep(onBack = { navController.navigate("home") })
                     }
                 }
             }

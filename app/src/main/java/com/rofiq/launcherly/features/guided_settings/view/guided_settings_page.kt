@@ -84,7 +84,7 @@ fun GuidedSettingsStep(
     ) {
         SettingsButtonList(
             items = settingsItems,
-            onBack = { navController.navigate("home") }
+            onBack = {navController.navigate("home")}
         )
     }
 }

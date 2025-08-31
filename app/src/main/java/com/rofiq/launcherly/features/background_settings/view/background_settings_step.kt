@@ -35,7 +35,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
-import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.KeyEventType
@@ -68,6 +67,7 @@ fun BackgroundSettingsStep(
     backgroundVM: BackgroundSettingsViewModel = hiltViewModel()
 ) {
     val backgroundState by backgroundVM.backgroundSettingsState.collectAsState()
+    val context = LocalContext.current
 
     GuidedStepLayout(
         title = "Background Settings",
@@ -87,7 +87,7 @@ fun BackgroundSettingsStep(
                 BackgroundGrid(
                     backgrounds = (backgroundState as BackgroundSettingsLoaded).availableBackgrounds,
                     currentBackground = (backgroundState as BackgroundSettingsLoaded).currentBackground,
-                    onBackgroundSelected = { backgroundVM.setBackground(it) },
+                    onBackgroundSelected = { backgroundVM.setBackground(it, context) },
                     onBack = onBack
                 )
             }
@@ -159,16 +159,14 @@ fun BackgroundCard(
     val generateVideoThumbVM: GenerateVideoThumbnailsViewModel = hiltViewModel(
         key = background.resourcePath
     )
-    
+
     // Generate thumbnail for this specific video when the card is first composed
     LaunchedEffect(background) {
-        if (background.type == BackgroundType.VIDEO) {
-            generateVideoThumbVM.generateThumbnailForVideo(background.resourcePath)
-        }
+        generateVideoThumbVM.generateThumbnailForVideo(background.resourcePath)
     }
-    
+
     val generateThumbState = generateVideoThumbVM.generateVideoThumbState.collectAsState()
-    
+
     val context = LocalContext.current
 
     Card(
@@ -222,15 +220,15 @@ fun BackgroundCard(
                 BackgroundType.VIDEO -> {
                     // Video thumbnail placeholder
                     Box(
-                        modifier = Modifier
+                        modifier = Modifier // ktlint-disable no-empty-glam-lambda
                             .fillMaxSize()
                             .background(TVColors.Surface),
                         contentAlignment = Alignment.Center
                     ) {
                         val thumbnail = generateThumbState.value
                         if (thumbnail != null) {
-                          Image(
-                                bitmap = thumbnail.asImageBitmap(),
+                            Image(
+                                bitmap = thumbnail.asImageBitmap(), // ktlint-disable indentation
                                 contentDescription = background.name,
                                 modifier = Modifier
                                     .fillMaxSize()
@@ -238,13 +236,14 @@ fun BackgroundCard(
                                 contentScale = ContentScale.Crop
                             )
                         } else {
-                            // Try to load Google Drive thumbnail using Coil
-                            val thumbnailUrl = if (background.resourcePath.contains("drive.google.com")) {
-                                GoogleDriveUtils.createThumbnailUrl(background.resourcePath)
-                            } else {
-                                null
-                            }
-                            
+                            // Try to load Google Drive thumbnail using Coil or use directUrl if available
+                            val thumbnailUrl =
+                                if (background.resourcePath.contains("drive.google.com")) {
+                                    GoogleDriveUtils.createThumbnailUrl(background.resourcePath)
+                                } else {
+                                    null
+                                }
+
                             if (thumbnailUrl != null) {
                                 AsyncImage(
                                     model = coil.request.ImageRequest.Builder(context)
@@ -254,7 +253,7 @@ fun BackgroundCard(
                                         .diskCachePolicy(CachePolicy.ENABLED)
                                         .build(),
                                     contentDescription = background.name,
-                                    modifier = Modifier
+                                    modifier = Modifier // ktlint-disable no-empty-glam-lambda
                                         .fillMaxSize()
                                         .clip(RoundedCornerShape(12.dp)),
                                     contentScale = ContentScale.Crop,
@@ -265,7 +264,7 @@ fun BackgroundCard(
                                     imageVector = Icons.Default.VideoLibrary,
                                     contentDescription = "Video",
                                     tint = TVColors.OnSurface,
-                                    modifier = Modifier.size(32.dp)
+                                    modifier = Modifier.size(32.dp) // ktlint-disable no-empty-glam-lambda
                                 )
                             }
                         }
