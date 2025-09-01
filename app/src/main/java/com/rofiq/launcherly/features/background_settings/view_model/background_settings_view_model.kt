@@ -1,6 +1,7 @@
 package com.rofiq.launcherly.features.background_settings.view_model
 
 import android.content.Context
+import android.net.Uri
 import androidx.annotation.OptIn
 import androidx.core.net.toUri
 import androidx.lifecycle.ViewModel
@@ -106,6 +107,24 @@ class BackgroundSettingsViewModel @Inject constructor(
                 }
             } catch (e: Exception) {
                 emit(BackgroundSettingsError(e.message ?: "Error setting background"))
+            }
+        }
+    }
+
+    /**
+     * Sets a local file as the background
+     */
+    fun setLocalBackground(context: Context, uri: Uri, type: BackgroundType, callback: (Boolean) -> Unit) {
+        viewModelScope.launch {
+            try {
+                val success = backgroundSettingsService.setLocalBackground(context, uri, type)
+                if (success) {
+                    // Reload background settings to reflect the change
+                    loadBackgroundSettings()
+                }
+                callback(success)
+            } catch (e: Exception) {
+                callback(false)
             }
         }
     }

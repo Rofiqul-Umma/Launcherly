@@ -1,3 +1,10 @@
 <resources>
     <string name="app_name">Launcherly</string>
+    <string name="select_local_image">Select Local Image</string>
+    <string name="select_local_video">Select Local Video</string>
+    <string name="local_file_picker_title">Choose Local Background</string>
+    <string name="local_file_picker_description">Select from your device storage</string>
+    <string name="image_background_option">Image</string>
+    <string name="video_background_option">Video</string>
+    <string name="back_to_background_options">Back to Background Options</string>
 </resources>

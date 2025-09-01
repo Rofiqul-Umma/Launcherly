@@ -16,6 +16,7 @@ import androidx.tv.material3.MaterialTheme
 import com.rofiq.launcherly.features.app_change_receiver.receiver.AppChangeReceiver
 import com.rofiq.launcherly.features.auth.view.LoginPage
 import com.rofiq.launcherly.features.background_settings.view.BackgroundSettingsStep
+import com.rofiq.launcherly.features.background_settings.view.LocalFilePicker
 import com.rofiq.launcherly.features.check_login.view.CheckLoginPage
 import com.rofiq.launcherly.features.fetch_date_time.view_model.FetchDateTimeViewModel
 import com.rofiq.launcherly.features.guided_settings.view.GuidedSettingsStep
@@ -47,6 +48,11 @@ class MainActivity : ComponentActivity() {
                     }
                     composable("background_settings") {
                         BackgroundSettingsStep(
+                            navController
+                        )
+                    }
+                    composable("local_file_picker") {
+                        LocalFilePicker(
                             navController
                         )
                     }

@@ -6,6 +6,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.focusable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -16,6 +17,7 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.VideoLibrary
 import androidx.compose.material3.Card
@@ -89,10 +91,16 @@ fun BackgroundSettingsStep(
                 BackgroundGrid(
                     backgrounds = (backgroundState as BackgroundSettingsLoaded).availableBackgrounds,
                     currentBackground = (backgroundState as BackgroundSettingsLoaded).currentBackground,
-                    onBackgroundSelected = { 
-                        backgroundVM.setBackground(it, context)
-                        navController.navigate("home") {
-                            popUpTo("background_settings") { inclusive = true }
+                    onBackgroundSelected = { background ->
+                        if (background.name == "Add Local File") {
+                            // Navigate to local file picker
+                            navController.navigate("local_file_picker")
+                        } else {
+                            // Set the selected background
+                            backgroundVM.setBackground(background, context)
+                            navController.navigate("home") {
+                                popUpTo("background_settings") { inclusive = true }
+                            }
                         }
                     },
                 )
@@ -120,7 +128,13 @@ fun BackgroundGrid(
     onBackgroundSelected: (BackgroundSetting) -> Unit,
 ) {
     var focusedIndex by remember { mutableIntStateOf(0) }
-    val focusRequesters = remember { backgrounds.map { FocusRequester() } }
+    // Include the "Add Local File" option in the list
+    val backgroundsPlusAdd = backgrounds + BackgroundSetting(
+        type = BackgroundType.IMAGE,
+        resourcePath = "add_local",
+        name = "Add Local File"
+    )
+    val focusRequesters = remember { backgroundsPlusAdd.map { FocusRequester() } }
 
 
     LaunchedEffect(Unit) {
@@ -135,17 +149,29 @@ fun BackgroundGrid(
             .fillMaxWidth()
             .padding(horizontal = 32.dp)
     ) {
-        itemsIndexed(backgrounds) { index, background ->
-            BackgroundCard(
-                background = background,
-                isSelected = background.resourcePath == currentBackground.resourcePath,
-                isFocused = focusedIndex == index,
-                focusRequester = focusRequesters[index],
-                onFocusChanged = { focused ->
-                    if (focused) focusedIndex = index
-                },
-                onSelected = { onBackgroundSelected(background) },
-            )
+        itemsIndexed(backgroundsPlusAdd) { index, background ->
+            if (background.name == "Add Local File") {
+                // Special "Add Local File" card
+                AddLocalFileCard(
+                    isFocused = focusedIndex == index,
+                    focusRequester = focusRequesters[index],
+                    onFocusChanged = { focused ->
+                        if (focused) focusedIndex = index
+                    },
+                    onSelected = { onBackgroundSelected(background) }
+                )
+            } else {
+                BackgroundCard(
+                    background = background,
+                    isSelected = background.resourcePath == currentBackground.resourcePath,
+                    isFocused = focusedIndex == index,
+                    focusRequester = focusRequesters[index],
+                    onFocusChanged = { focused ->
+                        if (focused) focusedIndex = index
+                    },
+                    onSelected = { onBackgroundSelected(background) },
+                )
+            }
         }
     }
 }
@@ -329,6 +355,59 @@ fun BackgroundCard(
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                     modifier = Modifier.fillMaxWidth()
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun AddLocalFileCard(
+    isFocused: Boolean,
+    focusRequester: FocusRequester,
+    onFocusChanged: (Boolean) -> Unit,
+    onSelected: () -> Unit,
+) {
+    Card(
+        modifier = Modifier
+            .aspectRatio(16f / 9f)
+            .focusRequester(focusRequester)
+            .onFocusChanged { onFocusChanged(it.isFocused) }
+            .focusable()
+            .border(
+                width = if (isFocused) 3.dp else 0.dp,
+                color = if (isFocused) TVColors.OnSurface else androidx.compose.ui.graphics.Color.Transparent,
+                shape = RoundedCornerShape(12.dp)
+            )
+            .onKeyEvent { keyEvent ->
+                if ((keyEvent.key == Key.DirectionCenter || keyEvent.key == Key.Enter) && keyEvent.type == KeyEventType.KeyUp) {
+                    onSelected()
+                    true
+                } else false
+            },
+        colors = CardDefaults.cardColors(
+            containerColor = TVColors.Surface.copy(alpha = 0.6f)
+        ),
+        shape = RoundedCornerShape(12.dp)
+    ) {
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.padding(16.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Add,
+                    contentDescription = "Add Local File",
+                    tint = TVColors.OnSurface,
+                    modifier = Modifier.size(32.dp)
+                )
+                Text(
+                    text = "Add Local File",
+                    style = TVTypography.BodyRegular.copy(color = TVColors.OnSurface),
+                    modifier = Modifier.padding(start = 8.dp)
                 )
             }
         }

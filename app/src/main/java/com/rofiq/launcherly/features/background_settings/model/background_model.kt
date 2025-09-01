@@ -1,6 +1,7 @@
 package com.rofiq.launcherly.features.background_settings.model
 
 import com.rofiq.launcherly.utils.GoogleDriveUtils
+import com.rofiq.launcherly.features.background_settings.utils.LocalFileUtils
 
 enum class BackgroundType {
     IMAGE,
@@ -21,13 +22,52 @@ data class BackgroundSetting(
     /**
      * Returns the direct URL for loading the resource.
      * For Google Drive sharing URLs, this converts them to direct download URLs.
+     * For local files, this returns the file path directly.
      */
     val directUrl: String
-        get() = if (sourceType == BackgroundSourceType.URL) {
-            GoogleDriveUtils.convertSharingUrlToDownloadUrl(resourcePath)
-        } else {
-            resourcePath
+        get() = when (sourceType) {
+            BackgroundSourceType.URL -> {
+                GoogleDriveUtils.convertSharingUrlToDownloadUrl(resourcePath)
+            }
+            BackgroundSourceType.LOCAL -> {
+                // For local files, return the path directly
+                resourcePath
+            }
         }
+    
+    companion object {
+        /**
+         * Creates a BackgroundSetting from a local file URI
+         */
+        fun fromLocalFile(
+            type: BackgroundType,
+            filePath: String,
+            name: String
+        ): BackgroundSetting {
+            return BackgroundSetting(
+                type = type,
+                sourceType = BackgroundSourceType.LOCAL,
+                resourcePath = filePath,
+                name = name
+            )
+        }
+        
+        /**
+         * Creates a BackgroundSetting from a URL
+         */
+        fun fromUrl(
+            type: BackgroundType,
+            url: String,
+            name: String
+        ): BackgroundSetting {
+            return BackgroundSetting(
+                type = type,
+                sourceType = BackgroundSourceType.URL,
+                resourcePath = url,
+                name = name
+            )
+        }
+    }
 }
 
 object BackgroundDefaults {
@@ -162,11 +202,6 @@ object BackgroundDefaults {
 
 
 
-
-
-
-
-
     )
     
     fun getAllBackgrounds() : List<BackgroundSetting> {
@@ -175,5 +210,19 @@ object BackgroundDefaults {
 
     fun getListDefaultVideoBackground() : List<BackgroundSetting> {
         return defaultVideoBackgrounds
+    }
+    
+    /**
+     * Creates a list of sample local backgrounds for demonstration
+     */
+    fun getSampleLocalBackgrounds(): List<BackgroundSetting> {
+        return listOf(
+            BackgroundSetting(
+                type = BackgroundType.IMAGE,
+                sourceType = BackgroundSourceType.LOCAL,
+                resourcePath = "android.resource://com.rofiq.launcherly/raw/default_background_image",
+                name = "Default Image"
+            )
+        )
     }
 }
