@@ -7,5 +7,5 @@ data class AppInfoModel(
     val name: String,
     val packageName: String,
     val icon: Drawable?,
-    val launcherIntent: Intent
+    val launcherIntent: Intent?
 )

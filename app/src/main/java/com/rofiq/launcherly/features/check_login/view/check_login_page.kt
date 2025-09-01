@@ -68,15 +68,6 @@ fun CheckLoginPage(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            // App logo or icon
-//            Image(
-//                painter = painterResource(id = R.drawable.background_auth), // Replace with your app logo
-//                contentDescription = "App Logo",
-//                modifier = Modifier.size(120.dp)
-//            )
-//
-//            Spacer(modifier = Modifier.height(24.dp))
-            
             // App name
             Text(
                 text = "Check Authentication Status",
