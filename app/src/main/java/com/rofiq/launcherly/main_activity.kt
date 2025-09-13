@@ -17,6 +17,7 @@ import com.rofiq.launcherly.features.auth.view.LoginPage
 import com.rofiq.launcherly.features.background_settings.view.BackgroundSettingsStep
 import com.rofiq.launcherly.features.background_settings.view.TVFilePicker
 import com.rofiq.launcherly.features.check_login.view.CheckLoginPage
+import com.rofiq.launcherly.features.favorite_apps.view.FavoriteAppsSettingsPage
 import com.rofiq.launcherly.features.fetch_date_time.view_model.FetchDateTimeViewModel
 import com.rofiq.launcherly.features.guided_settings.view.GuidedSettingsStep
 import com.rofiq.launcherly.features.home.view.HomePage
@@ -55,6 +56,11 @@ class MainActivity : ComponentActivity() {
                             navController
                         )
                     }
+                    composable("favorite_apps_settings") {
+                        FavoriteAppsSettingsPage(
+                            navController
+                        )
+                    }
                 }
             }
         }
@@ -80,7 +86,7 @@ class MainActivity : ComponentActivity() {
         }
         registerReceiver(timeReceiver, timeFilter)
 
-        appReceiver = AppChangeReceiver { homeVM.fetchInstalledApps() }
+                appReceiver = AppChangeReceiver { homeVM.fetchFavoriteApps() }
 
         registerReceiver(appReceiver, filter)
     }

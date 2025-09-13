@@ -17,6 +17,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Apps
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Wallpaper
 import androidx.compose.material3.Card
@@ -72,6 +73,12 @@ fun GuidedSettingsStep(
             description = "Change wallpaper and background",
             icon = Icons.Default.Wallpaper,
             action = { navController.navigate("background_settings") }
+        ),
+        SettingsItem(
+            title = "Favorite Apps",
+            description = "Select apps to display on home screen",
+            icon = Icons.Default.Apps,
+            action = { navController.navigate("favorite_apps_settings") }
         )
     )
 
@@ -135,11 +142,12 @@ fun GuidedStepLayout(
 fun SettingsButtonList(
     items: List<SettingsItem>
 ) {
-    var focusedIndex by remember { mutableIntStateOf(0) }
     val focusRequesters = remember { items.map { FocusRequester() } }
 
     LaunchedEffect(Unit) {
-        focusRequesters.firstOrNull()?.requestFocus()
+        if (focusRequesters.isNotEmpty()) {
+            focusRequesters.firstOrNull()?.requestFocus()
+        }
     }
 
     LazyColumn(
@@ -148,23 +156,14 @@ fun SettingsButtonList(
         modifier = Modifier.fillMaxWidth()
     ) {
         itemsIndexed(items) { index, item ->
+            val nextFocusRequester = if (index < items.size - 1) focusRequesters[index + 1] else null
+            val prevFocusRequester = if (index > 0) focusRequesters[index - 1] else null
+            
             SettingsButton(
                 item = item,
-                isFocused = focusedIndex == index,
                 focusRequester = focusRequesters[index],
-                onFocusChanged = { focused ->
-                    if (focused) focusedIndex = index
-                },
-                onNavigateUp = {
-                    if (index > 0) {
-                        focusRequesters[index - 1].requestFocus()
-                    }
-                },
-                onNavigateDown = {
-                    if (index < items.size - 1) {
-                        focusRequesters[index + 1].requestFocus()
-                    }
-                },
+                onNextFocus = { nextFocusRequester?.requestFocus() },
+                onPrevFocus = { prevFocusRequester?.requestFocus() }
             )
         }
     }
@@ -173,34 +172,36 @@ fun SettingsButtonList(
 @Composable
 fun SettingsButton(
     item: SettingsItem,
-    isFocused: Boolean,
     focusRequester: FocusRequester,
-    onFocusChanged: (Boolean) -> Unit,
-    onNavigateUp: () -> Unit,
-    onNavigateDown: () -> Unit,
+    onNextFocus: () -> Unit,
+    onPrevFocus: () -> Unit
 ) {
+    var isFocused by remember { mutableIntStateOf(0) } // 0 = not focused, 1 = focused
+
     Card(
         modifier = Modifier
             .fillMaxWidth(0.7f)
             .height(80.dp)
             .focusRequester(focusRequester)
-            .onFocusChanged { onFocusChanged(it.isFocused) }
+            .onFocusChanged { 
+                isFocused = if (it.isFocused) 1 else 0
+            }
             .focusable()
             .onKeyEvent { keyEvent ->
-                if (keyEvent.type == KeyEventType.KeyUp) {
+                if (keyEvent.type == KeyEventType.KeyDown) {
                     when (keyEvent.key) {
                         Key.DirectionCenter, Key.Enter -> {
                             item.action()
                             true
                         }
 
-                        Key.DirectionUp -> {
-                            onNavigateUp()
+                        Key.DirectionDown -> {
+                            onNextFocus()
                             true
                         }
 
-                        Key.DirectionDown -> {
-                            onNavigateDown()
+                        Key.DirectionUp -> {
+                            onPrevFocus()
                             true
                         }
 
@@ -209,7 +210,7 @@ fun SettingsButton(
                 } else false
             },
         colors = CardDefaults.cardColors(
-            containerColor = if (isFocused)
+            containerColor = if (isFocused == 1)
                 TVColors.OnSurfaceSecondary.copy(alpha = 0.3f)
             else
                 TVColors.Surface.copy(alpha = 0.6f)

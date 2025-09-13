@@ -1,9 +1,10 @@
 package com.rofiq.launcherly.features.home.service
 
 import android.content.Context
+import com.rofiq.launcherly.features.favorite_apps.service.FavoriteAppsService
 import com.rofiq.launcherly.features.home.model.AppInfoModel
 
-class HomeService(private val context: Context) {
+class HomeService(private val context: Context, private val favoriteAppsService: FavoriteAppsService) {
 
     fun fetchInstalledApps(): List<AppInfoModel> {
         val apps = mutableListOf<AppInfoModel>()
@@ -27,5 +28,15 @@ class HomeService(private val context: Context) {
             throw Exception("Error fetching installed apps", e)
         }
         return apps.sortedBy { it.name.lowercase() }
+    }
+
+    fun fetchFavoriteApps(): List<AppInfoModel> {
+        val allApps = fetchInstalledApps()
+        val favoritePackages = favoriteAppsService.getFavoriteApps().map { it.packageName }.toSet()
+        return allApps.filter { it.packageName in favoritePackages }
+    }
+
+    fun fetchAllApps(): List<AppInfoModel> {
+        return fetchInstalledApps()
     }
 }

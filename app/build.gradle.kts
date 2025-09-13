@@ -77,4 +77,7 @@ dependencies {
 
     // Retrofit converter
     implementation(libs.converter.gson)
+    
+    // Gson for JSON serialization
+    implementation(libs.gson)
 }

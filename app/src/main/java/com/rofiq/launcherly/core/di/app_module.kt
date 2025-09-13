@@ -6,6 +6,7 @@ import com.rofiq.launcherly.features.auth.service.AuthService
 import com.rofiq.launcherly.features.background_settings.service.BackgroundSettingsService
 import com.rofiq.launcherly.features.check_internet.service.CheckInternetService
 import com.rofiq.launcherly.features.device_manager.service.DeviceManagerService
+import com.rofiq.launcherly.features.favorite_apps.service.FavoriteAppsService
 import com.rofiq.launcherly.features.fetch_date_time.service.FetchDateTimeService
 import com.rofiq.launcherly.features.generate_video_thumbnails.service.GenerateVideoThumbnailsService
 import com.rofiq.launcherly.features.home.service.HomeService
@@ -30,8 +31,8 @@ object AppModule {
 
     @Provides
     @Singleton
-    fun provideHomeService(@ApplicationContext context: Context): HomeService {
-        return HomeService(context)
+    fun provideHomeService(@ApplicationContext context: Context, favoriteAppsService: FavoriteAppsService): HomeService {
+        return HomeService(context, favoriteAppsService)
     }
 
     @Provides
@@ -74,5 +75,11 @@ object AppModule {
     @Singleton
     fun provideGenerateVideoThumbnailsService(@ApplicationContext context: Context): GenerateVideoThumbnailsService {
         return GenerateVideoThumbnailsService(context)
+    }
+
+    @Provides
+    @Singleton
+    fun provideFavoriteAppsService(@ApplicationContext context: Context): FavoriteAppsService {
+        return FavoriteAppsService(context)
     }
 }

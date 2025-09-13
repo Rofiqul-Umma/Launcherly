@@ -2,6 +2,7 @@ package com.rofiq.launcherly.features.home.view_model
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.rofiq.launcherly.features.favorite_apps.service.FavoriteAppsService
 import com.rofiq.launcherly.features.home.service.HomeService
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.cancel
@@ -13,14 +14,15 @@ import javax.inject.Inject
 
 @HiltViewModel
 class HomeViewModel @Inject constructor(
-    private val homeService: HomeService
+    private val homeService: HomeService,
+    private val favoriteAppsService: FavoriteAppsService
 ) : ViewModel() {
 
     private val _homeState = MutableStateFlow<HomeState>(HomeInitialState)
     val homeState: StateFlow<HomeState> = _homeState.asStateFlow()
 
     init {
-        fetchInstalledApps()
+        fetchFavoriteApps()
     }
 
     fun emit(state: HomeState) {
@@ -29,10 +31,22 @@ class HomeViewModel @Inject constructor(
         }
     }
 
-    fun fetchInstalledApps() {
+    fun fetchFavoriteApps() {
         viewModelScope.launch {
             try {
-                val apps = homeService.fetchInstalledApps()
+                val apps = homeService.fetchFavoriteApps()
+                if (apps.isEmpty()) emit(HomeEmptyFetchAppsState)
+                else emit(HomeLoadedFetchAppState(apps))
+            } catch (e: Exception) {
+                emit(HomeErrorFetchAppsState(e.message ?: "Error fetching apps"))
+            }
+        }
+    }
+
+    fun fetchAllApps() {
+        viewModelScope.launch {
+            try {
+                val apps = homeService.fetchAllApps()
                 if (apps.isEmpty()) emit(HomeEmptyFetchAppsState)
                 else emit(HomeLoadedFetchAppState(apps))
             } catch (e: Exception) {
