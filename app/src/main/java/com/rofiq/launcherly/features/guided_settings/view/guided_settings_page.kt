@@ -48,6 +48,7 @@ import androidx.navigation.NavController
 import com.rofiq.launcherly.common.color.TVColors
 import com.rofiq.launcherly.common.text_style.TVTypography
 import com.rofiq.launcherly.features.device_manager.view_model.DeviceManagerViewModel
+import com.rofiq.launcherly.features.home.view_model.HomeViewModel
 
 data class SettingsItem(
     val title: String,
@@ -174,7 +175,7 @@ fun SettingsButton(
     item: SettingsItem,
     focusRequester: FocusRequester,
     onNextFocus: () -> Unit,
-    onPrevFocus: () -> Unit
+    onPrevFocus: () -> Unit,
 ) {
     var isFocused by remember { mutableIntStateOf(0) } // 0 = not focused, 1 = focused
 

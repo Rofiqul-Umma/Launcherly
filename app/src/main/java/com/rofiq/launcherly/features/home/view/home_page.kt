@@ -14,7 +14,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Apps
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.Wifi
 import androidx.compose.material.icons.filled.WifiOff
 import androidx.compose.material3.Icon
@@ -22,8 +24,10 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
@@ -53,15 +57,17 @@ import com.rofiq.launcherly.features.fetch_date_time.view_model.FetchDateTimeLoa
 import com.rofiq.launcherly.features.fetch_date_time.view_model.FetchDateTimeSuccess
 import com.rofiq.launcherly.features.fetch_date_time.view_model.FetchDateTimeViewModel
 import com.rofiq.launcherly.features.home.view.component.ListApps
+import com.rofiq.launcherly.features.home.view_model.HomeViewModel
 
 @OptIn(UnstableApi::class, ExperimentalTvMaterial3Api::class)
 @Composable
 fun HomePage(
     navController: NavController,
+    homeVM: HomeViewModel = hiltViewModel(),
+    dateTimeVM: FetchDateTimeViewModel = hiltViewModel() ,
+    checkInternetVM: CheckInternetViewModel = hiltViewModel(),
+     deviceManagerVM: DeviceManagerViewModel = hiltViewModel()
 ) {
-    val dateTimeVM: FetchDateTimeViewModel = hiltViewModel()
-    val checkInternetVM: CheckInternetViewModel = hiltViewModel()
-    val deviceManagerVM: DeviceManagerViewModel = hiltViewModel()
 
     val fetchDateTimeState = dateTimeVM.fetchDateTimeState.collectAsState()
     val checkInternetState = checkInternetVM.checkInternetState.collectAsState()
@@ -71,6 +77,11 @@ fun HomePage(
 
     val wifiFocused = remember { mutableStateOf(false) }
     val settingsFocused = remember { mutableStateOf(false) }
+
+    var showAllApps by remember { mutableStateOf(false) }
+
+    val showAllAppsFocus = remember { mutableStateOf(false) }
+    val showAllAppFocusRequester = remember { FocusRequester() }
 
     // ExoPlayer is now handled by DynamicBackground component
 
@@ -138,6 +149,41 @@ fun HomePage(
                         horizontalArrangement = Arrangement.End,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
+                        Icon(
+                            imageVector = if (showAllApps) Icons.Default.Star else Icons.Default.Apps,
+                            contentDescription = if (showAllApps) "Show favorite apps" else "Show all apps",
+                            modifier = Modifier
+                                .size(30.dp)
+                                .focusRequester(showAllAppFocusRequester)
+                                .onFocusChanged { showAllAppsFocus.value = it.isFocused }
+                                .focusable()
+                                .background(
+                                    color = if (showAllAppsFocus.value) TVColors.OnSurfaceSecondary.copy(alpha = 0.5f) else Color.Transparent,
+                                    shape = RoundedCornerShape(100.dp)
+                                )
+                                .padding(5.dp)
+                                .onKeyEvent { keyEvent ->
+                                    if (keyEvent.type == KeyEventType.KeyDown) {
+                                        when (keyEvent.key) {
+                                            Key.DirectionCenter, Key.Enter -> {
+                                                showAllApps = !showAllApps
+                                                if (showAllApps) {
+                                                    homeVM.fetchAllApps()
+                                                } else {
+                                                    homeVM.fetchFavoriteApps()
+                                                }
+                                                true
+                                            }
+
+                                            else -> false
+                                        }
+                                    } else false
+                                },
+                            tint = TVColors.OnSurface
+                        )
+
+                        Spacer(modifier = Modifier.size(16.dp))
+
                         Icon(
                             imageVector = Icons.Default.Settings,
                             contentDescription = "Settings",

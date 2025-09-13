@@ -38,6 +38,7 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.KeyEventType
 import androidx.compose.ui.input.key.key
@@ -50,6 +51,7 @@ import coil.compose.AsyncImage
 import com.rofiq.launcherly.common.color.TVColors
 import com.rofiq.launcherly.common.text_style.TVTypography
 import com.rofiq.launcherly.common.widgets.LCircularLoading
+import com.rofiq.launcherly.features.home.view_model.HomeEmptyFetchAppsState
 import com.rofiq.launcherly.features.home.view_model.HomeErrorFetchAppsState
 import com.rofiq.launcherly.features.home.view_model.HomeLoadedFetchAppState
 import com.rofiq.launcherly.features.home.view_model.HomeLoadingFetchAppsState
@@ -67,10 +69,10 @@ fun ListApps(
     val homeState = homeVM.homeState.collectAsState()
     val launchAppState by launchAppVM.launchAppState.collectAsState()
     val firstAppFocusRequester = remember { FocusRequester() }
-    var showAllApps by remember { mutableStateOf(false) }
 
     LaunchedEffect(firstAppFocusRequester) {
         firstAppFocusRequester.requestFocus()
+        homeVM.fetchFavoriteApps()
     }
 
     when (launchAppState) {
@@ -81,43 +83,17 @@ fun ListApps(
         }
     }
 
-    Box(
-        contentAlignment = Alignment.Center,
-        modifier = Modifier
-            .padding(10.dp)
-            .clip(RoundedCornerShape(18.dp))
-            .background(TVColors.Surface.copy(alpha = 0.4f))
-    ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            // Toggle button to switch between favorite and all apps
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 8.dp),
-                horizontalArrangement = Arrangement.End
-            ) {
-                Icon(
-                    imageVector = if (showAllApps) Icons.Default.Star else Icons.Default.Apps,
-                    contentDescription = if (showAllApps) "Show favorite apps" else "Show all apps",
-                    modifier = Modifier
-                        .size(24.dp)
-                        .clickable {
-                            showAllApps = !showAllApps
-                            if (showAllApps) {
-                                homeVM.fetchAllApps()
-                            } else {
-                                homeVM.fetchFavoriteApps()
-                            }
-                        }
-                        .padding(4.dp),
-                    tint = TVColors.OnSurface
+        Box(
+            contentAlignment = Alignment.Center,
+            modifier = Modifier
+                .padding(10.dp)
+                .clip(RoundedCornerShape(18.dp))
+                .background(
+                    if (homeState.value is HomeEmptyFetchAppsState) Color.Transparent else TVColors.Surface.copy(
+                        alpha = 0.4f
+                    )
                 )
-                
-                Spacer(modifier = Modifier.width(8.dp))
-            }
-
+        ) {
             when (homeState.value) {
                 is HomeLoadingFetchAppsState -> {
                     LCircularLoading()
@@ -157,23 +133,26 @@ fun ListApps(
                                     contentDescription = app.name,
                                     modifier = Modifier
                                         .size(imageSize.value)
-                                        .drawBehind {
-                                            if (appListFocused.value) {
-                                                // Draw the rounded line
-                                                drawRoundRect(
-                                                    color = TVColors.OnSurfaceVariant.copy(alpha = 0.5f),
-                                                    topLeft = androidx.compose.ui.geometry.Offset(
-                                                        x = 0f,
-                                                        y = size.height - 2.dp.toPx() - (3.5.dp.toPx() / 2) // Adjust Y to center the line
-                                                    ),
-                                                    size = androidx.compose.ui.geometry.Size(
-                                                        width = size.width,
-                                                        height = 4.dp.toPx()
-                                                    ),
-                                                    cornerRadius = CornerRadius(x = 10.dp.toPx(), y = 10.dp.toPx()) // Adjust corner radius as needed
-                                                )
-                                            }
-                                        }
+//                                        .drawBehind {
+//                                            if (appListFocused.value) {
+//                                                // Draw the rounded line
+//                                                drawRoundRect(
+//                                                    color = TVColors.OnSurfaceVariant.copy(alpha = 0.5f),
+//                                                    topLeft = androidx.compose.ui.geometry.Offset(
+//                                                        x = 0f,
+//                                                        y = size.height - 2.dp.toPx() - (3.5.dp.toPx() / 2) // Adjust Y to center the line
+//                                                    ),
+//                                                    size = androidx.compose.ui.geometry.Size(
+//                                                        width = size.width,
+//                                                        height = 4.dp.toPx()
+//                                                    ),
+//                                                    cornerRadius = CornerRadius(
+//                                                        x = 10.dp.toPx(),
+//                                                        y = 10.dp.toPx()
+//                                                    ) // Adjust corner radius as needed
+//                                                )
+//                                            }
+//                                        }
                                         .padding(10.dp)
                                 )
                             }
@@ -202,5 +181,4 @@ fun ListApps(
                 }
             }
         }
-    }
 }
