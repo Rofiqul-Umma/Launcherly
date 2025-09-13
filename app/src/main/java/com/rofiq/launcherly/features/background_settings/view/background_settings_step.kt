@@ -50,7 +50,6 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
-import coil.compose.AsyncImage
 import coil.compose.SubcomposeAsyncImage
 import coil.request.CachePolicy
 import com.rofiq.launcherly.common.color.TVColors
@@ -151,7 +150,6 @@ fun BackgroundGrid(
     ) {
         itemsIndexed(backgroundsPlusAdd) { index, background ->
             if (background.name == "Add Local File") {
-                // Special "Add Local File" card
                 AddLocalFileCard(
                     isFocused = focusedIndex == index,
                     focusRequester = focusRequesters[index],

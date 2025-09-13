@@ -5,14 +5,12 @@ import androidx.lifecycle.viewModelScope
 import com.rofiq.launcherly.features.fetch_date_time.model.FetchDateTimeModel
 import com.rofiq.launcherly.features.fetch_date_time.service.FetchDateTimeService
 import dagger.hilt.android.lifecycle.HiltViewModel
-import javax.inject.Inject
 import kotlinx.coroutines.cancel
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import kotlin.time.Duration.Companion.seconds
+import javax.inject.Inject
 
 @HiltViewModel
 class FetchDateTimeViewModel @Inject constructor(

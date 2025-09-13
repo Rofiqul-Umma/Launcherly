@@ -1,7 +1,6 @@
 package com.rofiq.launcherly
 
 import TimeChangeReceiver
-import android.content.BroadcastReceiver
 import android.content.Intent
 import android.content.IntentFilter
 import android.os.Bundle
@@ -16,7 +15,6 @@ import androidx.tv.material3.MaterialTheme
 import com.rofiq.launcherly.features.app_change_receiver.receiver.AppChangeReceiver
 import com.rofiq.launcherly.features.auth.view.LoginPage
 import com.rofiq.launcherly.features.background_settings.view.BackgroundSettingsStep
-import com.rofiq.launcherly.features.background_settings.view.LocalFilePicker
 import com.rofiq.launcherly.features.background_settings.view.TVFilePicker
 import com.rofiq.launcherly.features.check_login.view.CheckLoginPage
 import com.rofiq.launcherly.features.fetch_date_time.view_model.FetchDateTimeViewModel

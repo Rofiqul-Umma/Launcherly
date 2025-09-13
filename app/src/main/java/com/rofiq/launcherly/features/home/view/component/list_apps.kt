@@ -98,7 +98,7 @@ fun ListApps(
                             if (isFirst) firstAppFocusRequester else remember { FocusRequester() }
                         val appListFocused = remember { mutableStateOf(false) }
                         val imageSize = animateDpAsState(
-                            targetValue = if (appListFocused.value) 60.dp else 55.dp,
+                            targetValue = if (appListFocused.value) 90.dp else 70.dp,
                             label = "AppIconSize"
                         )
                         Column(
