@@ -1,6 +1,14 @@
 package com.rofiq.launcherly.features.background_settings.view
 
+import android.Manifest
+import android.content.ContentUris
+import android.content.Context
 import android.net.Uri
+import android.os.Build
+import android.provider.MediaStore
+import android.util.Log
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -23,8 +31,7 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Folder
-import androidx.compose.material.icons.filled.Image
+import androidx.compose.material.icons.filled.VideoLibrary
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -37,7 +44,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.scale
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
@@ -49,16 +55,19 @@ import androidx.compose.ui.input.key.onKeyEvent
 import androidx.compose.ui.input.key.type
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
-import coil.compose.AsyncImage
+import coil.ImageLoader
+import coil.compose.SubcomposeAsyncImage
 import com.rofiq.launcherly.common.color.TVColors
 import com.rofiq.launcherly.common.text_style.TVTypography
+import com.rofiq.launcherly.common.widgets.LCircularLoading
 import com.rofiq.launcherly.features.background_settings.model.BackgroundType
 import com.rofiq.launcherly.features.background_settings.view_model.BackgroundSettingsViewModel
-import java.io.File
+
+data class MediaItem(val uri: Uri, val mediaType: Int)
 
 @Composable
 fun TVFilePicker(
@@ -66,32 +75,47 @@ fun TVFilePicker(
     backgroundVM: BackgroundSettingsViewModel = hiltViewModel()
 ) {
     val context = LocalContext.current
-    var currentPath by remember { mutableStateOf( "/storage/emulated/0/Download") }
-    var imageFiles by remember { mutableStateOf<List<File>>(emptyList()) }
-    var folderFiles by remember { mutableStateOf<List<File>>(emptyList()) }
-    
-    // Load files when path changes
-    LaunchedEffect(currentPath) {
-        loadFiles(currentPath) { folders, images ->
-            folderFiles = folders
-            imageFiles = images
+    var mediaFiles by remember { mutableStateOf<List<MediaItem>>(emptyList()) }
+    var permissionsGranted by remember { mutableStateOf(false) }
+
+    val permissionsToRequest = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+        arrayOf(
+            Manifest.permission.READ_MEDIA_IMAGES,
+            Manifest.permission.READ_MEDIA_VIDEO
+        )
+    } else {
+        arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE)
+    }
+
+    val launcher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestMultiplePermissions(),
+        onResult = { permissions ->
+            permissionsGranted = permissions.values.all { it }
+        }
+    )
+
+    LaunchedEffect(Unit) {
+        launcher.launch(permissionsToRequest)
+    }
+
+    LaunchedEffect(permissionsGranted) {
+        if (permissionsGranted) {
+            mediaFiles = backgroundVM.loadMediaFromMediaStore(context).map { MediaItem(it.uri, it.mediaType) }
         }
     }
-    
+
     Column(
         modifier = Modifier
             .fillMaxSize()
             .padding(32.dp)
             .focusGroup()
     ) {
-        // Header with back button
         Row(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            
             Text(
-                text = "Select Image",
+                text = "Select Media",
                 style = TVTypography.HeaderLarge.copy(
                     color = TVColors.OnSurface,
                 ),
@@ -100,77 +124,72 @@ fun TVFilePicker(
                     .padding(start = 16.dp)
             )
         }
-        
+
         Spacer(modifier = Modifier.height(16.dp))
 
-        // File grid
-        TVFileGrid(
-            folderFiles = folderFiles,
-            imageFiles = imageFiles,
-            onFolderSelected = { folder ->
-                currentPath = folder.absolutePath
-            },
-            onImageSelected = { imageFile ->
-                // Convert file to URI
-                val uri = Uri.fromFile(imageFile)
-                // Handle the selected image
-                backgroundVM.setLocalBackground(context, uri, BackgroundType.IMAGE) { success ->
-                    if (success) {
-                        // Navigate back to home or show success message
-                        navController.navigate("home") {
-                            popUpTo("background_settings") { inclusive = true }
+        if (permissionsGranted) {
+            TVFileGrid(
+                mediaFiles = mediaFiles,
+                onMediaSelected = { mediaItem ->
+                    val backgroundType = if (mediaItem.mediaType == MediaStore.Files.FileColumns.MEDIA_TYPE_IMAGE) {
+                        BackgroundType.IMAGE
+                    } else {
+                        BackgroundType.VIDEO
+                    }
+                    backgroundVM.setLocalBackground(context, mediaItem.uri, backgroundType) { success ->
+                        if (success) {
+                            navController.navigate("home") {
+                                popUpTo("background_settings") { inclusive = true }
+                            }
                         }
                     }
-                }
-            },
-            onNavigateUp = {
-                val parent = File(currentPath).parentFile
-                if (parent != null && parent.exists()) {
-                    currentPath = parent.absolutePath
-                }
+                },
+                imageLoader = backgroundVM.imageLoader
+            )
+        } else {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = "Storage permission is required to select a background. Please grant the permission.",
+                    style = TVTypography.BodyLarge,
+                    color = TVColors.OnSurface,
+                    textAlign = TextAlign.Center
+                )
             }
-        )
+        }
     }
 }
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun TVFileGrid(
-    folderFiles: List<File>,
-    imageFiles: List<File>,
-    onFolderSelected: (File) -> Unit,
-    onImageSelected: (File) -> Unit,
-    onNavigateUp: () -> Unit
+    mediaFiles: List<MediaItem>,
+    onMediaSelected: (MediaItem) -> Unit,
+    imageLoader: ImageLoader
 ) {
-    val allFiles = folderFiles + imageFiles
     var focusedIndex by remember { mutableIntStateOf(0) }
-    val focusRequesters = remember(allFiles.size) { 
-        List(allFiles.size) { FocusRequester() } 
+    val focusRequesters = remember(mediaFiles.size) {
+        List(mediaFiles.size) { FocusRequester() }
     }
 
     LaunchedEffect(Unit) {
         focusRequesters.firstOrNull()?.requestFocus()
     }
-    
+
     LazyVerticalGrid(
         columns = GridCells.Fixed(4),
-        modifier = Modifier
-            .fillMaxSize()
-            .onKeyEvent { keyEvent ->
-                if (keyEvent.key == Key.Back && keyEvent.type == KeyEventType.KeyUp) {
-                    onNavigateUp()
-                    true
-                } else {
-                    false
-                }
-            },
+        modifier = Modifier.fillMaxSize(),
         contentPadding = PaddingValues(8.dp),
         horizontalArrangement = Arrangement.spacedBy(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        itemsIndexed(allFiles) { index, file ->
+        itemsIndexed(mediaFiles) { index, mediaItem ->
             val isFocused = focusedIndex == index
-            
+
+            Log.e("COMPOSE", "MediaItem: $mediaItem. uri: ${mediaItem.uri.path}")
+
             Box(
                 modifier = Modifier
                     .height(120.dp)
@@ -185,7 +204,7 @@ fun TVFileGrid(
                         shape = RoundedCornerShape(8.dp)
                     )
                     .focusRequester(focusRequesters[index])
-                    .onFocusChanged { 
+                    .onFocusChanged {
                         if (it.isFocused) focusedIndex = index
                     }
                     .focusable()
@@ -193,13 +212,10 @@ fun TVFileGrid(
                         if (keyEvent.type == KeyEventType.KeyUp) {
                             when (keyEvent.key) {
                                 Key.DirectionCenter, Key.Enter -> {
-                                    if (file.isDirectory) {
-                                        onFolderSelected(file)
-                                    } else {
-                                        onImageSelected(file)
-                                    }
+                                    onMediaSelected(mediaItem)
                                     true
                                 }
+
                                 else -> false
                             }
                         } else {
@@ -208,82 +224,50 @@ fun TVFileGrid(
                     }
                     .combinedClickable(
                         onClick = {
-                            if (file.isDirectory) {
-                                onFolderSelected(file)
-                            } else {
-                                onImageSelected(file)
-                            }
+                            onMediaSelected(mediaItem)
                         }
                     )
             ) {
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Center,
-                    modifier = Modifier.fillMaxSize()
-                ) {
-                    Icon(
-                        imageVector = if (file.isDirectory) Icons.Default.Folder else Icons.Default.Image,
-                        contentDescription = null,
-                        tint = if (isFocused) TVColors.OnSurface else TVColors.OnSurface,
-                        modifier = Modifier.size(48.dp)
-                    )
-                    
-                    Spacer(modifier = Modifier.height(8.dp))
-                    
-                    Text(
-                        text = file.name,
-                        style = TVTypography.BodySmall.copy(
-                            color = if (isFocused) TVColors.OnSurface else TVColors.OnSurface
-                        ),
-                        maxLines = 2,
-                        overflow = TextOverflow.Ellipsis,
-                        modifier = Modifier.padding(horizontal = 4.dp)
-                    )
-                }
-                
-                // Thumbnail for images
-                if (!file.isDirectory) {
-                    AsyncImage(
-                        model = file,
-                        contentDescription = null,
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .clip(RoundedCornerShape(8.dp)),
-                        contentScale = ContentScale.Crop
-                    )
-                }
+                SubcomposeAsyncImage(
+                    model = mediaItem.uri,
+                    imageLoader = imageLoader,
+                    contentDescription = null,
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .clip(RoundedCornerShape(8.dp)),
+                    contentScale = ContentScale.Crop,
+                    loading = {
+                        Box(
+                            modifier = Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            LCircularLoading(
+                                size = 30,
+                                strokeWidth = 4
+                            )
+                        }
+                    },
+                    error = {
+                        Box(
+                            modifier = Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.VideoLibrary,
+                                contentDescription = "Video",
+                                tint = TVColors.OnSurface,
+                                modifier = Modifier.size(48.dp)
+                            )
+                        }
+                    }
+                )
             }
         }
     }
-    
+
     LaunchedEffect(Unit) {
-        // Request focus on the first item if available
         if (focusRequesters.isNotEmpty()) {
             focusRequesters.first().requestFocus()
         }
     }
-}
-
-private fun loadFiles(
-    path: String,
-    onFilesLoaded: (List<File>, List<File>) -> Unit
-) {
-    val directory = File(path)
-    if (!directory.exists() || !directory.isDirectory) {
-        onFilesLoaded(emptyList(), emptyList())
-        return
-    }
-    
-    val files = directory.listFiles()?.toList() ?: emptyList()
-    val folders = files.filter { it.isDirectory }.sortedBy { it.name }
-    val images = files.filter { 
-        it.isFile && isImageFile(it.name) 
-    }.sortedBy { it.name }
-    
-    onFilesLoaded(folders, images)
-}
-
-private fun isImageFile(name: String): Boolean {
-    val imageExtensions = listOf(".jpg", ".jpeg", ".png", ".gif", ".bmp", ".webp")
-    return imageExtensions.any { name.lowercase().endsWith(it) }
 }

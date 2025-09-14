@@ -74,10 +74,8 @@ dependencies {
 
     // Async Image
     implementation(libs.coil.compose)
+    implementation(libs.coil.video)
 
     // Retrofit converter
     implementation(libs.converter.gson)
-    
-    // Gson for JSON serialization
-    implementation(libs.gson)
 }

@@ -1,7 +1,9 @@
 package com.rofiq.launcherly.features.background_settings.view_model
 
+import android.content.ContentUris
 import android.content.Context
 import android.net.Uri
+import android.provider.MediaStore
 import androidx.annotation.OptIn
 import androidx.core.net.toUri
 import androidx.lifecycle.ViewModel
@@ -12,8 +14,10 @@ import androidx.media3.common.Player
 import androidx.media3.common.util.Log
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
+import coil.ImageLoader
 import com.rofiq.launcherly.features.background_settings.model.BackgroundSetting
 import com.rofiq.launcherly.features.background_settings.model.BackgroundType
+import com.rofiq.launcherly.features.background_settings.model.MediaItemModel
 import com.rofiq.launcherly.features.background_settings.service.BackgroundSettingsService
 import com.rofiq.launcherly.utils.GoogleDriveUtils
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -26,7 +30,8 @@ import javax.inject.Inject
 
 @HiltViewModel
 class BackgroundSettingsViewModel @Inject constructor(
-    private val backgroundSettingsService: BackgroundSettingsService
+    private val backgroundSettingsService: BackgroundSettingsService,
+    val imageLoader: ImageLoader
 ) : ViewModel() {
 
     private val _backgroundSettingsState = MutableStateFlow<BackgroundSettingsState>(BackgroundSettingsInitial)
@@ -209,6 +214,43 @@ class BackgroundSettingsViewModel @Inject constructor(
                 it.playWhenReady = false
             }
         }
+    }
+
+     fun loadMediaFromMediaStore(context: Context): List<MediaItemModel> {
+        val mediaList = mutableListOf<MediaItemModel>()
+        val projection = arrayOf(
+            MediaStore.Files.FileColumns._ID,
+            MediaStore.Files.FileColumns.MEDIA_TYPE
+        )
+
+        val selection = "${MediaStore.Files.FileColumns.MEDIA_TYPE} = ? OR ${MediaStore.Files.FileColumns.MEDIA_TYPE} = ?"
+        val selectionArgs = arrayOf(
+            MediaStore.Files.FileColumns.MEDIA_TYPE_IMAGE.toString(),
+            MediaStore.Files.FileColumns.MEDIA_TYPE_VIDEO.toString()
+        )
+
+        val sortOrder = "${MediaStore.Files.FileColumns.DATE_ADDED} DESC"
+
+        val queryUri = MediaStore.Files.getContentUri("external")
+
+        context.contentResolver.query(
+            queryUri,
+            projection,
+            selection,
+            selectionArgs,
+            sortOrder
+        )?.use { cursor ->
+            val idColumn = cursor.getColumnIndexOrThrow(MediaStore.Files.FileColumns._ID)
+            val mediaTypeColumn = cursor.getColumnIndexOrThrow(MediaStore.Files.FileColumns.MEDIA_TYPE)
+
+            while (cursor.moveToNext()) {
+                val id = cursor.getLong(idColumn)
+                val mediaType = cursor.getInt(mediaTypeColumn)
+                val contentUri = ContentUris.withAppendedId(queryUri, id)
+                mediaList.add(MediaItemModel(contentUri, mediaType))
+            }
+        }
+        return mediaList
     }
 
     override fun onCleared() {

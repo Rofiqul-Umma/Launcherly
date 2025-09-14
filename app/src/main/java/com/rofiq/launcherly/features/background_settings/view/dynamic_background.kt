@@ -1,7 +1,6 @@
 package com.rofiq.launcherly.features.background_settings.view
 
 import android.content.Context
-import android.net.Uri
 import androidx.annotation.OptIn
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Box
@@ -16,6 +15,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.core.net.toUri
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
@@ -28,11 +28,12 @@ import coil.request.CachePolicy
 import coil.request.ImageRequest
 import coil.size.Scale
 import com.rofiq.launcherly.R
+import com.rofiq.launcherly.features.background_settings.model.BackgroundSourceType
 import com.rofiq.launcherly.features.background_settings.model.BackgroundType
+import com.rofiq.launcherly.features.background_settings.utils.LocalFileUtils
 import com.rofiq.launcherly.features.background_settings.view_model.BackgroundSettingsLoaded
 import com.rofiq.launcherly.features.background_settings.view_model.BackgroundSettingsViewModel
 import com.rofiq.launcherly.utils.GoogleDriveUtils
-import com.rofiq.launcherly.features.background_settings.utils.LocalFileUtils
 
 @OptIn(UnstableApi::class)
 @Composable
@@ -110,7 +111,7 @@ fun DynamicBackground(
         when (background.type) {
             BackgroundType.VIDEO -> {
                 // Handle both URL and local video files
-                val videoUri = if (background.sourceType == com.rofiq.launcherly.features.background_settings.model.BackgroundSourceType.LOCAL) {
+              if (background.sourceType == BackgroundSourceType.LOCAL) {
                     // For local files, we use the file path directly
                     background.resourcePath
                 } else {
@@ -155,7 +156,7 @@ fun DynamicBackground(
                     // For local files (not Android resources), load from file path
                     AsyncImage(
                         model = ImageRequest.Builder(context)
-                            .data(Uri.parse("file://${background.resourcePath}"))
+                            .data("file://${background.resourcePath}".toUri())
                             .crossfade(true)
                             .memoryCachePolicy(CachePolicy.ENABLED)
                             .diskCachePolicy(CachePolicy.ENABLED)
@@ -195,15 +196,4 @@ fun DynamicBackground(
             contentScale = ContentScale.Crop
         )
     }
-}
-
-@Composable
-private fun ShowImagePlaceholder(context: Context, reason: String) {
-    // Use androidx.compose.foundation.Image for painters
-    Image(
-        painter = painterResource(id = R.drawable.background_auth),
-        contentDescription = "Placeholder Background",
-        modifier = Modifier.fillMaxSize(),
-        contentScale = ContentScale.Crop
-    )
 }

@@ -3,25 +3,15 @@ package com.rofiq.launcherly.features.home.view.component
 import android.util.Log
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.focusable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Apps
-import androidx.compose.material.icons.filled.Star
-import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -29,15 +19,12 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
-import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.KeyEventType
@@ -133,26 +120,6 @@ fun ListApps(
                                     contentDescription = app.name,
                                     modifier = Modifier
                                         .size(imageSize.value)
-//                                        .drawBehind {
-//                                            if (appListFocused.value) {
-//                                                // Draw the rounded line
-//                                                drawRoundRect(
-//                                                    color = TVColors.OnSurfaceVariant.copy(alpha = 0.5f),
-//                                                    topLeft = androidx.compose.ui.geometry.Offset(
-//                                                        x = 0f,
-//                                                        y = size.height - 2.dp.toPx() - (3.5.dp.toPx() / 2) // Adjust Y to center the line
-//                                                    ),
-//                                                    size = androidx.compose.ui.geometry.Size(
-//                                                        width = size.width,
-//                                                        height = 4.dp.toPx()
-//                                                    ),
-//                                                    cornerRadius = CornerRadius(
-//                                                        x = 10.dp.toPx(),
-//                                                        y = 10.dp.toPx()
-//                                                    ) // Adjust corner radius as needed
-//                                                )
-//                                            }
-//                                        }
                                         .padding(10.dp)
                                 )
                             }
