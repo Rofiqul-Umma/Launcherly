@@ -158,6 +158,9 @@ class BackgroundSettingsViewModel @Inject constructor(
             _exoPlayer.value = null
         }
 
+
+
+
         // Create new player only if needed
         if (_exoPlayer.value == null) {
             currentPlayerUrl = videoUrl
@@ -167,7 +170,6 @@ class BackgroundSettingsViewModel @Inject constructor(
                 repeatMode = Player.REPEAT_MODE_ONE
                 videoScalingMode = androidx.media3.common.C.VIDEO_SCALING_MODE_SCALE_TO_FIT_WITH_CROPPING
                 playWhenReady = true
-
                 addListener(object : Player.Listener {
                     override fun onPlayerError(error: PlaybackException) {
                       Log.e("BackgroundVM_ExoPlayer", "Player error: ${error.message}", error)
@@ -183,6 +185,13 @@ class BackgroundSettingsViewModel @Inject constructor(
                 prepare()
             }
             _exoPlayer.value = player
+            mutePlayer()
+        }
+    }
+
+    fun mutePlayer() {
+        _exoPlayer.value?.let {
+            it.volume = 0f
         }
     }
 
