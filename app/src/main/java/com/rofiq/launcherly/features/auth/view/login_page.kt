@@ -9,16 +9,23 @@ import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Error
 import androidx.compose.material.icons.outlined.Lock
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardColors
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CardElevation
 import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
@@ -52,6 +59,7 @@ import androidx.navigation.NavController
 import com.rofiq.launcherly.R
 import com.rofiq.launcherly.common.color.TVColors
 import com.rofiq.launcherly.common.text_style.TVTypography
+import com.rofiq.launcherly.common.widgets.CardNotification
 import com.rofiq.launcherly.common.widgets.LCircularLoading
 import com.rofiq.launcherly.features.auth.view_model.AuthAuthenticated
 import com.rofiq.launcherly.features.auth.view_model.AuthLoading
@@ -78,36 +86,35 @@ fun LoginPage(
 
     LaunchedEffect(authState) {
         when (authState) {
-            is AuthLoading -> {
-                // Still checking authentication status
-            }
             is AuthAuthenticated -> {
                 // User is authenticated, navigate to home
                 navController.navigate("home") {
                     popUpTo("login") { inclusive = true }
                 }
             }
-            is AuthUnauthenticated -> {
-                snackbarHS.showSnackbar((authState as AuthUnauthenticated).message)
-            }
         }
     }
 
-    val textFieldScale by animateFloatAsState(targetValue = if (isAccessCodeFieldFocused) 1.05f else 1.0f, label = "TextField Scale")
+    val textFieldScale by animateFloatAsState(
+        targetValue = if (isAccessCodeFieldFocused) 1.05f else 1.0f,
+        label = "TextField Scale"
+    )
 
     Scaffold(
         containerColor = TVColors.Background,
-        snackbarHost = { SnackbarHost(
-            hostState = snackbarHS,
-            snackbar = { snackbarData ->
-                Snackbar(
-                    snackbarData = snackbarData,
-                    containerColor = TVColors.Border,
-                    contentColor = TVColors.OnSurface,
-                    shape = RoundedCornerShape(12.dp)
-                )
-            }
-        ) }
+        snackbarHost = {
+            SnackbarHost(
+                hostState = snackbarHS,
+                snackbar = { snackbarData ->
+                    Snackbar(
+                        snackbarData = snackbarData,
+                        containerColor = TVColors.Border,
+                        contentColor = TVColors.OnSurface,
+                        shape = RoundedCornerShape(12.dp)
+                    )
+                }
+            )
+        }
     ) { paddingValues ->
         Box(
             modifier = Modifier
@@ -191,7 +198,7 @@ fun LoginPage(
                                 )
                             },
                             leadingIcon = {
-                                when(authState) {
+                                when (authState) {
                                     is AuthLoading -> LCircularLoading(strokeWidth = 3)
                                     else -> Icon(
                                         Icons.Outlined.Lock,
@@ -225,6 +232,15 @@ fun LoginPage(
                             ),
                             interactionSource = accessCodeFieldInteractionSource
                         )
+
+                        Spacer(modifier = Modifier.height(25.dp))
+
+                        if (authState is AuthUnauthenticated) {
+                            CardNotification(
+                                message = (authState as AuthUnauthenticated).message,
+                                icon = Icons.Default.Error
+                            )
+                        }
                     }
                 }
             }

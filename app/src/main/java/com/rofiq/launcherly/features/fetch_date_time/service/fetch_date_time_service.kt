@@ -15,7 +15,7 @@ class FetchDateTimeService {
     fun getCurrentDate(): String {
         val calendar = Calendar.getInstance()
         // Format for Day of the week, Month abbreviation, and Day of the month
-        val dateFormat = SimpleDateFormat("EEEE, MMM dd", Locale.getDefault())
+        val dateFormat = SimpleDateFormat("EEEE, MMM dd yyyy", Locale.getDefault())
         val date = dateFormat.format(calendar.time)
         return date
     }

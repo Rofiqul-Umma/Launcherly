@@ -31,11 +31,13 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.VideoLibrary
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -65,9 +67,10 @@ import com.rofiq.launcherly.common.color.TVColors
 import com.rofiq.launcherly.common.text_style.TVTypography
 import com.rofiq.launcherly.common.widgets.LCircularLoading
 import com.rofiq.launcherly.features.background_settings.model.BackgroundType
+import com.rofiq.launcherly.features.background_settings.model.MediaItemModel
+import com.rofiq.launcherly.features.background_settings.view_model.BackgroundSettingsLoaded
 import com.rofiq.launcherly.features.background_settings.view_model.BackgroundSettingsViewModel
 
-data class MediaItem(val uri: Uri, val mediaType: Int)
 
 @Composable
 fun TVFilePicker(
@@ -75,7 +78,7 @@ fun TVFilePicker(
     backgroundVM: BackgroundSettingsViewModel = hiltViewModel()
 ) {
     val context = LocalContext.current
-    var mediaFiles by remember { mutableStateOf<List<MediaItem>>(emptyList()) }
+    var mediaFiles by remember { mutableStateOf<List<MediaItemModel>>(emptyList()) }
     var permissionsGranted by remember { mutableStateOf(false) }
 
     val permissionsToRequest = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -100,7 +103,7 @@ fun TVFilePicker(
 
     LaunchedEffect(permissionsGranted) {
         if (permissionsGranted) {
-            mediaFiles = backgroundVM.loadMediaFromMediaStore(context).map { MediaItem(it.uri, it.mediaType) }
+            mediaFiles = backgroundVM.loadMediaFromMediaStore(context).map { MediaItemModel(it.uri, it.mediaType, it.path) }
         }
     }
 
@@ -165,14 +168,19 @@ fun TVFilePicker(
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun TVFileGrid(
-    mediaFiles: List<MediaItem>,
-    onMediaSelected: (MediaItem) -> Unit,
-    imageLoader: ImageLoader
+    mediaFiles: List<MediaItemModel>,
+    onMediaSelected: (MediaItemModel) -> Unit,
+    imageLoader: ImageLoader,
+    backgroundVM : BackgroundSettingsViewModel = hiltViewModel()
 ) {
     var focusedIndex by remember { mutableIntStateOf(0) }
     val focusRequesters = remember(mediaFiles.size) {
         List(mediaFiles.size) { FocusRequester() }
     }
+
+    val backgroundState by backgroundVM.backgroundSettingsState.collectAsState()
+
+    var isSelected by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
         focusRequesters.firstOrNull()?.requestFocus()
@@ -188,10 +196,11 @@ fun TVFileGrid(
         itemsIndexed(mediaFiles) { index, mediaItem ->
             val isFocused = focusedIndex == index
 
-            Log.e("COMPOSE", "MediaItem: $mediaItem. uri: ${mediaItem.uri.path}")
+            isSelected = mediaItem.path == (backgroundState as BackgroundSettingsLoaded).currentBackground.resourcePath
 
             Box(
                 modifier = Modifier
+                    .fillMaxSize()
                     .height(120.dp)
                     .clip(RoundedCornerShape(8.dp))
                     .background(
@@ -261,6 +270,22 @@ fun TVFileGrid(
                         }
                     }
                 )
+
+                if (isSelected) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(TVColors.OnSurfaceSecondary.copy(alpha = 0.3f)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Check,
+                            contentDescription = "Selected",
+                            tint = TVColors.OnSurface,
+                            modifier = Modifier.size(48.dp)
+                        )
+                    }
+                }
             }
         }
     }

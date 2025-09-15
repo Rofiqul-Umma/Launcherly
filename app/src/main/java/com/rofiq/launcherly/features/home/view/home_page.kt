@@ -139,7 +139,7 @@ fun HomePage(
 
                                 Text(
                                     text = (fetchDateTimeState.value as FetchDateTimeSuccess).dateTime.date,
-                                    style = TVTypography.BodyLarge.copy(color = TVColors.OnSurfaceVariant)
+                                    style = TVTypography.BodyLarge.copy(color = TVColors.OnSurface)
                                 )
                             }
                         }

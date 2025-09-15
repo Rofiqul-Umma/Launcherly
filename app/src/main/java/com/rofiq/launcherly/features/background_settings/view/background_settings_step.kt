@@ -18,6 +18,7 @@ import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.AddToQueue
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.VideoLibrary
 import androidx.compose.material3.Card
@@ -397,13 +398,13 @@ fun AddLocalFileCard(
                 modifier = Modifier.padding(16.dp)
             ) {
                 Icon(
-                    imageVector = Icons.Default.Add,
+                    imageVector = Icons.Default.AddToQueue,
                     contentDescription = "Add Local File",
                     tint = TVColors.OnSurface,
                     modifier = Modifier.size(32.dp)
                 )
                 Text(
-                    text = "Add Local File",
+                    text = "Local Background",
                     style = TVTypography.BodyRegular.copy(color = TVColors.OnSurface),
                     modifier = Modifier.padding(start = 8.dp)
                 )

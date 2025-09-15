@@ -26,6 +26,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import kotlin.io.path.Path
 
 
 @HiltViewModel
@@ -256,7 +257,7 @@ class BackgroundSettingsViewModel @Inject constructor(
                 val id = cursor.getLong(idColumn)
                 val mediaType = cursor.getInt(mediaTypeColumn)
                 val contentUri = ContentUris.withAppendedId(queryUri, id)
-                mediaList.add(MediaItemModel(contentUri, mediaType))
+                mediaList.add(MediaItemModel(contentUri, mediaType, ""))
             }
         }
         return mediaList
