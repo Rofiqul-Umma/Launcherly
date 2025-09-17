@@ -1,12 +1,8 @@
 package com.rofiq.launcherly.features.background_settings.view
 
 import android.Manifest
-import android.content.ContentUris
-import android.content.Context
-import android.net.Uri
 import android.os.Build
 import android.provider.MediaStore
-import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -33,6 +29,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.VideoLibrary
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -65,7 +62,7 @@ import coil.ImageLoader
 import coil.compose.SubcomposeAsyncImage
 import com.rofiq.launcherly.common.color.TVColors
 import com.rofiq.launcherly.common.text_style.TVTypography
-import com.rofiq.launcherly.common.widgets.LCircularLoading
+import com.rofiq.launcherly.common.widgets.LoadingIndicator
 import com.rofiq.launcherly.features.background_settings.model.BackgroundType
 import com.rofiq.launcherly.features.background_settings.model.MediaItemModel
 import com.rofiq.launcherly.features.background_settings.view_model.BackgroundSettingsLoaded
@@ -165,7 +162,7 @@ fun TVFilePicker(
     }
 }
 
-@OptIn(ExperimentalFoundationApi::class)
+@OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun TVFileGrid(
     mediaFiles: List<MediaItemModel>,
@@ -250,10 +247,7 @@ fun TVFileGrid(
                             modifier = Modifier.fillMaxSize(),
                             contentAlignment = Alignment.Center
                         ) {
-                            LCircularLoading(
-                                size = 30,
-                                strokeWidth = 4
-                            )
+                            LoadingIndicator()
                         }
                     },
                     error = {

@@ -1,6 +1,5 @@
 package com.rofiq.launcherly.features.home.view
 
-import androidx.annotation.OptIn
 import androidx.compose.foundation.background
 import androidx.compose.foundation.focusable
 import androidx.compose.foundation.layout.Arrangement
@@ -19,6 +18,7 @@ import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.Wifi
 import androidx.compose.material.icons.filled.WifiOff
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -39,16 +39,13 @@ import androidx.compose.ui.input.key.KeyEventType
 import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onKeyEvent
 import androidx.compose.ui.input.key.type
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.media3.common.util.UnstableApi
 import androidx.navigation.NavController
-import androidx.tv.material3.ExperimentalTvMaterial3Api
 import com.rofiq.launcherly.common.color.TVColors
 import com.rofiq.launcherly.common.text_style.TVTypography
-import com.rofiq.launcherly.common.widgets.LCircularLoading
+import com.rofiq.launcherly.common.widgets.LoadingIndicator
 import com.rofiq.launcherly.features.background_settings.view.DynamicBackground
 import com.rofiq.launcherly.features.check_internet.view_model.CheckInternetIsConnected
 import com.rofiq.launcherly.features.check_internet.view_model.CheckInternetViewModel
@@ -59,7 +56,8 @@ import com.rofiq.launcherly.features.fetch_date_time.view_model.FetchDateTimeVie
 import com.rofiq.launcherly.features.home.view.component.ListApps
 import com.rofiq.launcherly.features.home.view_model.HomeViewModel
 
-@OptIn(UnstableApi::class, ExperimentalTvMaterial3Api::class)
+
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun HomePage(
     navController: NavController,
@@ -130,7 +128,7 @@ fun HomePage(
                         horizontalAlignment = Alignment.Start
                     ) {
                         when (fetchDateTimeState.value) {
-                            is FetchDateTimeLoading -> LCircularLoading()
+                            is FetchDateTimeLoading -> LoadingIndicator()
                             is FetchDateTimeSuccess -> {
                                 Text(
                                     text = (fetchDateTimeState.value as FetchDateTimeSuccess).dateTime.time,

@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -21,12 +22,13 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.rofiq.launcherly.common.color.TVColors
 import com.rofiq.launcherly.common.text_style.TVTypography
-import com.rofiq.launcherly.common.widgets.LCircularLoading
+import com.rofiq.launcherly.common.widgets.LoadingIndicator
 import com.rofiq.launcherly.features.auth.view_model.AuthAuthenticated
 import com.rofiq.launcherly.features.auth.view_model.AuthLoading
 import com.rofiq.launcherly.features.auth.view_model.AuthUnauthenticated
 import com.rofiq.launcherly.features.auth.view_model.AuthViewModel
 
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun CheckLoginPage(
     navController: NavController,
@@ -86,10 +88,8 @@ fun CheckLoginPage(
             Spacer(modifier = Modifier.height(24.dp))
 
             // Loading indicator
-            LCircularLoading(
-                color = TVColors.OnSurface,
-                size = 30,
-                strokeWidth = 4
+            LoadingIndicator(
+                size = 50
             )
         }
     }

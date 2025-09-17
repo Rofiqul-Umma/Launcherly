@@ -9,12 +9,10 @@ import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -22,10 +20,7 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Error
 import androidx.compose.material.icons.outlined.Lock
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardColors
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CardElevation
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
@@ -60,12 +55,13 @@ import com.rofiq.launcherly.R
 import com.rofiq.launcherly.common.color.TVColors
 import com.rofiq.launcherly.common.text_style.TVTypography
 import com.rofiq.launcherly.common.widgets.CardNotification
-import com.rofiq.launcherly.common.widgets.LCircularLoading
+import com.rofiq.launcherly.common.widgets.LoadingIndicator
 import com.rofiq.launcherly.features.auth.view_model.AuthAuthenticated
 import com.rofiq.launcherly.features.auth.view_model.AuthLoading
 import com.rofiq.launcherly.features.auth.view_model.AuthUnauthenticated
 import com.rofiq.launcherly.features.auth.view_model.AuthViewModel
 
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun LoginPage(
     authVM: AuthViewModel = hiltViewModel(),
@@ -199,7 +195,7 @@ fun LoginPage(
                             },
                             leadingIcon = {
                                 when (authState) {
-                                    is AuthLoading -> LCircularLoading(strokeWidth = 3)
+                                    is AuthLoading -> LoadingIndicator()
                                     else -> Icon(
                                         Icons.Outlined.Lock,
                                         contentDescription = "Lock Icon",

@@ -15,7 +15,6 @@ import javax.inject.Inject
 @HiltViewModel
 class HomeViewModel @Inject constructor(
     private val homeService: HomeService,
-    private val favoriteAppsService: FavoriteAppsService
 ) : ViewModel() {
 
     private val _homeState = MutableStateFlow<HomeState>(HomeInitialState)

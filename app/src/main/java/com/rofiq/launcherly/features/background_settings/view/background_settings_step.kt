@@ -17,12 +17,12 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.AddToQueue
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.VideoLibrary
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -55,7 +55,7 @@ import coil.compose.SubcomposeAsyncImage
 import coil.request.CachePolicy
 import com.rofiq.launcherly.common.color.TVColors
 import com.rofiq.launcherly.common.text_style.TVTypography
-import com.rofiq.launcherly.common.widgets.LCircularLoading
+import com.rofiq.launcherly.common.widgets.LoadingIndicator
 import com.rofiq.launcherly.features.background_settings.model.BackgroundSetting
 import com.rofiq.launcherly.features.background_settings.model.BackgroundType
 import com.rofiq.launcherly.features.background_settings.view_model.BackgroundSettingsLoaded
@@ -65,6 +65,7 @@ import com.rofiq.launcherly.features.generate_video_thumbnails.view_model.Genera
 import com.rofiq.launcherly.features.guided_settings.view.GuidedStepLayout
 import com.rofiq.launcherly.utils.GoogleDriveUtils
 
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun BackgroundSettingsStep(
     navController: NavController,
@@ -83,7 +84,7 @@ fun BackgroundSettingsStep(
                     modifier = Modifier.fillMaxSize(),
                     contentAlignment = Alignment.Center
                 ) {
-                    LCircularLoading()
+                    LoadingIndicator()
                 }
             }
 
@@ -175,6 +176,7 @@ fun BackgroundGrid(
     }
 }
 
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun BackgroundCard(
     background: BackgroundSetting,
@@ -240,10 +242,7 @@ fun BackgroundCard(
                                 modifier = Modifier.fillMaxSize(),
                                 contentAlignment = Alignment.Center
                             ) {
-                                LCircularLoading(
-                                    size = 30,
-                                    strokeWidth = 4
-                                )
+                                LoadingIndicator()
                             }
                         },
                         modifier = Modifier
@@ -294,10 +293,7 @@ fun BackgroundCard(
                                             modifier = Modifier.fillMaxSize(),
                                             contentAlignment = Alignment.Center
                                         ) {
-                                            LCircularLoading(
-                                                size = 30,
-                                                strokeWidth = 4
-                                            )
+                                            LoadingIndicator()
                                         }
                                     },
                                     modifier = Modifier

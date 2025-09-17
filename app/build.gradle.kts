@@ -78,4 +78,9 @@ dependencies {
 
     // Retrofit converter
     implementation(libs.converter.gson)
+
+    // New Material 3 Design
+    implementation(libs.androidx.material3)
+    implementation(libs.androidx.compose.material3.window.size.class1)
+    implementation(libs.androidx.compose.material3.adaptive.navigation.suite)
 }

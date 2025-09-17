@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -37,7 +38,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
 import com.rofiq.launcherly.common.color.TVColors
 import com.rofiq.launcherly.common.text_style.TVTypography
-import com.rofiq.launcherly.common.widgets.LCircularLoading
+import com.rofiq.launcherly.common.widgets.LoadingIndicator
 import com.rofiq.launcherly.features.home.view_model.HomeEmptyFetchAppsState
 import com.rofiq.launcherly.features.home.view_model.HomeErrorFetchAppsState
 import com.rofiq.launcherly.features.home.view_model.HomeLoadedFetchAppState
@@ -48,6 +49,7 @@ import com.rofiq.launcherly.features.launch_app.view_model.LaunchAppLoading
 import com.rofiq.launcherly.features.launch_app.view_model.LaunchAppSuccess
 import com.rofiq.launcherly.features.launch_app.view_model.LaunchAppViewModel
 
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun ListApps(
     homeVM: HomeViewModel = hiltViewModel(),
@@ -83,7 +85,7 @@ fun ListApps(
         ) {
             when (homeState.value) {
                 is HomeLoadingFetchAppsState -> {
-                    LCircularLoading()
+                    LoadingIndicator()
                 }
 
                 is HomeLoadedFetchAppState -> {
