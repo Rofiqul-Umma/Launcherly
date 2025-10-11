@@ -3,6 +3,7 @@ package com.rofiq.launcherly.features.background_settings.view
 import android.Manifest
 import android.os.Build
 import android.provider.MediaStore
+import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -28,6 +29,8 @@ import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Error
+import androidx.compose.material.icons.filled.ErrorOutline
 import androidx.compose.material.icons.filled.VideoLibrary
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
@@ -56,6 +59,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import coil.ImageLoader
@@ -67,6 +71,8 @@ import com.rofiq.launcherly.features.background_settings.model.BackgroundType
 import com.rofiq.launcherly.features.background_settings.model.MediaItemModel
 import com.rofiq.launcherly.features.background_settings.view_model.BackgroundSettingsLoaded
 import com.rofiq.launcherly.features.background_settings.view_model.BackgroundSettingsViewModel
+import com.rofiq.launcherly.features.background_settings.view_model.FetchMediaStoreLoading
+import com.rofiq.launcherly.features.background_settings.view_model.FetchMediaStoreSuccess
 
 
 @Composable
@@ -77,6 +83,8 @@ fun TVFilePicker(
     val context = LocalContext.current
     var mediaFiles by remember { mutableStateOf<List<MediaItemModel>>(emptyList()) }
     var permissionsGranted by remember { mutableStateOf(false) }
+
+    val backgroundState = backgroundVM.backgroundSettingsState.collectAsState()
 
     val permissionsToRequest = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
         arrayOf(
@@ -100,7 +108,29 @@ fun TVFilePicker(
 
     LaunchedEffect(permissionsGranted) {
         if (permissionsGranted) {
-            mediaFiles = backgroundVM.loadMediaFromMediaStore(context).map { MediaItemModel(it.uri, it.mediaType, it.path) }
+            backgroundVM.loadMediaFromMediaStore()
+        }
+    }
+
+    LaunchedEffect(backgroundState) {
+        when (backgroundState.value) {
+            is FetchMediaStoreLoading -> {
+                Log.d("FetchMediaStoreLoading", "FetchMediaStoreLoading")
+            }
+
+            is FetchMediaStoreSuccess -> {
+                mediaFiles = (backgroundState.value as FetchMediaStoreSuccess).data.map {
+                    MediaItemModel(
+                        it.uri,
+                        it.mediaType,
+                        it.path
+                    )
+                }
+            }
+
+            else -> {
+                mediaFiles = emptyList()
+            }
         }
     }
 
@@ -128,24 +158,57 @@ fun TVFilePicker(
         Spacer(modifier = Modifier.height(16.dp))
 
         if (permissionsGranted) {
-            TVFileGrid(
-                mediaFiles = mediaFiles,
-                onMediaSelected = { mediaItem ->
-                    val backgroundType = if (mediaItem.mediaType == MediaStore.Files.FileColumns.MEDIA_TYPE_IMAGE) {
-                        BackgroundType.IMAGE
-                    } else {
-                        BackgroundType.VIDEO
-                    }
-                    backgroundVM.setLocalBackground(context, mediaItem.uri, backgroundType) { success ->
-                        if (success) {
-                            navController.navigate("home") {
-                                popUpTo("background_settings") { inclusive = true }
+            if (mediaFiles.isEmpty()) {
+                Box(
+                    contentAlignment = Alignment.Center,
+                    modifier = Modifier.fillMaxSize()
+                ) {
+                   Column(
+                       horizontalAlignment = Alignment.CenterHorizontally,
+                       verticalArrangement = Arrangement.Center
+                   ) {
+                       Icon(
+                           imageVector = Icons.Default.Error,
+                           contentDescription = "Video Error",
+                           tint = TVColors.OnSurface,
+                           modifier = Modifier.size(50.dp)
+                       )
+                       Spacer(modifier = Modifier.height(16.dp))
+                       Text(
+                           text = "There are no media files in your storage.",
+                           style = TVTypography.BodyLarge.copy(
+                               fontSize = 18.sp,
+                               textAlign = TextAlign.Center
+                           ),
+                           color = TVColors.OnSurface,
+                       )
+                   }
+                }
+            } else {
+                TVFileGrid(
+                    mediaFiles = mediaFiles,
+                    onMediaSelected = { mediaItem ->
+                        val backgroundType =
+                            if (mediaItem.mediaType == MediaStore.Files.FileColumns.MEDIA_TYPE_IMAGE) {
+                                BackgroundType.IMAGE
+                            } else {
+                                BackgroundType.VIDEO
+                            }
+                        backgroundVM.setLocalBackground(
+                            context,
+                            mediaItem.uri,
+                            backgroundType
+                        ) { success ->
+                            if (success) {
+                                navController.navigate("home") {
+                                    popUpTo("background_settings") { inclusive = true }
+                                }
                             }
                         }
-                    }
-                },
-                imageLoader = backgroundVM.imageLoader
-            )
+                    },
+                    imageLoader = backgroundVM.imageLoader
+                )
+            }
         } else {
             Box(
                 modifier = Modifier.fillMaxSize(),
@@ -168,7 +231,7 @@ fun TVFileGrid(
     mediaFiles: List<MediaItemModel>,
     onMediaSelected: (MediaItemModel) -> Unit,
     imageLoader: ImageLoader,
-    backgroundVM : BackgroundSettingsViewModel = hiltViewModel()
+    backgroundVM: BackgroundSettingsViewModel = hiltViewModel()
 ) {
     var focusedIndex by remember { mutableIntStateOf(0) }
     val focusRequesters = remember(mediaFiles.size) {
@@ -192,8 +255,9 @@ fun TVFileGrid(
     ) {
         itemsIndexed(mediaFiles) { index, mediaItem ->
             val isFocused = focusedIndex == index
-
-            isSelected = mediaItem.path == (backgroundState as BackgroundSettingsLoaded).currentBackground.resourcePath
+            print("Media local: " + mediaItem.path)
+            isSelected =
+                mediaItem.path == (backgroundState as BackgroundSettingsLoaded).currentBackground.resourcePath
 
             Box(
                 modifier = Modifier
@@ -281,6 +345,7 @@ fun TVFileGrid(
                     }
                 }
             }
+
         }
     }
 

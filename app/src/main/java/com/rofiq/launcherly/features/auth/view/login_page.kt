@@ -195,7 +195,7 @@ fun LoginPage(
                             },
                             leadingIcon = {
                                 when (authState) {
-                                    is AuthLoading -> LoadingIndicator()
+                                    is AuthLoading -> LoadingIndicator(size = 30)
                                     else -> Icon(
                                         Icons.Outlined.Lock,
                                         contentDescription = "Lock Icon",

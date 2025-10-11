@@ -35,8 +35,10 @@ class BackgroundSettingsViewModel @Inject constructor(
     val imageLoader: ImageLoader
 ) : ViewModel() {
 
-    private val _backgroundSettingsState = MutableStateFlow<BackgroundSettingsState>(BackgroundSettingsInitial)
-    val backgroundSettingsState: StateFlow<BackgroundSettingsState> = _backgroundSettingsState.asStateFlow()
+    private val _backgroundSettingsState =
+        MutableStateFlow<BackgroundSettingsState>(BackgroundSettingsInitial)
+    val backgroundSettingsState: StateFlow<BackgroundSettingsState> =
+        _backgroundSettingsState.asStateFlow()
 
     private val _exoPlayer = MutableStateFlow<ExoPlayer?>(null)
     val exoPlayer: StateFlow<ExoPlayer?> = _exoPlayer.asStateFlow()
@@ -68,14 +70,15 @@ class BackgroundSettingsViewModel @Inject constructor(
                         currentBackground = currentBackground
                     )
                 )
-                
+
                 // Initialize player for video background if needed
                 if (currentBackground.type == BackgroundType.VIDEO) {
-                    val videoUrl = if (currentBackground.sourceType == com.rofiq.launcherly.features.background_settings.model.BackgroundSourceType.URL) {
-                        GoogleDriveUtils.convertSharingUrlToDownloadUrl(currentBackground.resourcePath)
-                    } else {
-                        currentBackground.resourcePath
-                    }
+                    val videoUrl =
+                        if (currentBackground.sourceType == com.rofiq.launcherly.features.background_settings.model.BackgroundSourceType.URL) {
+                            GoogleDriveUtils.convertSharingUrlToDownloadUrl(currentBackground.resourcePath)
+                        } else {
+                            currentBackground.resourcePath
+                        }
                     if (videoUrl.isNotBlank() && appContext != null) {
                         initializePlayer(appContext!!, videoUrl)
                     }
@@ -90,22 +93,25 @@ class BackgroundSettingsViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 backgroundSettingsService.setBackground(backgroundSetting)
-                
+
                 // Update the state with the new background
-                val availableBackgrounds = (_backgroundSettingsState.value as? BackgroundSettingsLoaded)?.availableBackgrounds ?: emptyList()
+                val availableBackgrounds =
+                    (_backgroundSettingsState.value as? BackgroundSettingsLoaded)?.availableBackgrounds
+                        ?: emptyList()
                 val newState = BackgroundSettingsLoaded(
                     availableBackgrounds = availableBackgrounds,
                     currentBackground = backgroundSetting
                 )
                 emit(newState)
-                
+
                 // Handle player initialization/switching based on new background type
                 if (backgroundSetting.type == BackgroundType.VIDEO) {
-                    val videoUrl = if (backgroundSetting.sourceType == com.rofiq.launcherly.features.background_settings.model.BackgroundSourceType.URL) {
-                        GoogleDriveUtils.convertSharingUrlToDownloadUrl(backgroundSetting.resourcePath)
-                    } else {
-                        backgroundSetting.resourcePath
-                    }
+                    val videoUrl =
+                        if (backgroundSetting.sourceType == com.rofiq.launcherly.features.background_settings.model.BackgroundSourceType.URL) {
+                            GoogleDriveUtils.convertSharingUrlToDownloadUrl(backgroundSetting.resourcePath)
+                        } else {
+                            backgroundSetting.resourcePath
+                        }
                     initializePlayer(context.applicationContext, videoUrl)
                 } else {
                     // For non-video backgrounds, pause the player but don't release it
@@ -120,7 +126,12 @@ class BackgroundSettingsViewModel @Inject constructor(
     /**
      * Sets a local file as the background
      */
-    fun setLocalBackground(context: Context, uri: Uri, type: BackgroundType, callback: (Boolean) -> Unit) {
+    fun setLocalBackground(
+        context: Context,
+        uri: Uri,
+        type: BackgroundType,
+        callback: (Boolean) -> Unit
+    ) {
         viewModelScope.launch {
             try {
                 val success = backgroundSettingsService.setLocalBackground(context, uri, type)
@@ -160,8 +171,6 @@ class BackgroundSettingsViewModel @Inject constructor(
         }
 
 
-
-
         // Create new player only if needed
         if (_exoPlayer.value == null) {
             currentPlayerUrl = videoUrl
@@ -169,17 +178,21 @@ class BackgroundSettingsViewModel @Inject constructor(
                 val mediaItem = MediaItem.fromUri(videoUrl.toUri())
                 setMediaItem(mediaItem)
                 repeatMode = Player.REPEAT_MODE_ONE
-                videoScalingMode = androidx.media3.common.C.VIDEO_SCALING_MODE_SCALE_TO_FIT_WITH_CROPPING
+                videoScalingMode =
+                    androidx.media3.common.C.VIDEO_SCALING_MODE_SCALE_TO_FIT_WITH_CROPPING
                 playWhenReady = true
                 addListener(object : Player.Listener {
                     override fun onPlayerError(error: PlaybackException) {
-                      Log.e("BackgroundVM_ExoPlayer", "Player error: ${error.message}", error)
+                        Log.e("BackgroundVM_ExoPlayer", "Player error: ${error.message}", error)
                         currentPlayerUrl = null
                     }
 
                     override fun onPlaybackStateChanged(playbackState: Int) {
                         if (playbackState == Player.STATE_READY) {
-                            Log.d("BackgroundVM_ExoPlayer", "Player is ready and will play when ready.")
+                            Log.d(
+                                "BackgroundVM_ExoPlayer",
+                                "Player is ready and will play when ready."
+                            )
                         }
                     }
                 })
@@ -226,41 +239,17 @@ class BackgroundSettingsViewModel @Inject constructor(
         }
     }
 
-     fun loadMediaFromMediaStore(context: Context): List<MediaItemModel> {
-        val mediaList = mutableListOf<MediaItemModel>()
-        val projection = arrayOf(
-            MediaStore.Files.FileColumns._ID,
-            MediaStore.Files.FileColumns.MEDIA_TYPE
-        )
-
-        val selection = "${MediaStore.Files.FileColumns.MEDIA_TYPE} = ? OR ${MediaStore.Files.FileColumns.MEDIA_TYPE} = ?"
-        val selectionArgs = arrayOf(
-            MediaStore.Files.FileColumns.MEDIA_TYPE_IMAGE.toString(),
-            MediaStore.Files.FileColumns.MEDIA_TYPE_VIDEO.toString()
-        )
-
-        val sortOrder = "${MediaStore.Files.FileColumns.DATE_ADDED} DESC"
-
-        val queryUri = MediaStore.Files.getContentUri("external")
-
-        context.contentResolver.query(
-            queryUri,
-            projection,
-            selection,
-            selectionArgs,
-            sortOrder
-        )?.use { cursor ->
-            val idColumn = cursor.getColumnIndexOrThrow(MediaStore.Files.FileColumns._ID)
-            val mediaTypeColumn = cursor.getColumnIndexOrThrow(MediaStore.Files.FileColumns.MEDIA_TYPE)
-
-            while (cursor.moveToNext()) {
-                val id = cursor.getLong(idColumn)
-                val mediaType = cursor.getInt(mediaTypeColumn)
-                val contentUri = ContentUris.withAppendedId(queryUri, id)
-                mediaList.add(MediaItemModel(contentUri, mediaType, ""))
+    fun loadMediaFromMediaStore() {
+        viewModelScope.launch {
+            emit(FetchMediaStoreLoading)
+            runCatching {
+                backgroundSettingsService.fetchFileFromMediaStore()
+            }.onSuccess {
+                if (it.isEmpty()) emit(FetchMediaStoreEmpty) else emit(FetchMediaStoreSuccess(it))
+            }.onFailure {
+                emit(FetchMediaStoreError(it.message ?: "Error fetching file from MediaStore"))
             }
         }
-        return mediaList
     }
 
     override fun onCleared() {

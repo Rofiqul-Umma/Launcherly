@@ -89,7 +89,7 @@ fun CheckLoginPage(
 
             // Loading indicator
             LoadingIndicator(
-                size = 50
+                size = 35
             )
         }
     }

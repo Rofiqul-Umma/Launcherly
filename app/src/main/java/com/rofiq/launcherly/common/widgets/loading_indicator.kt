@@ -1,8 +1,8 @@
 package com.rofiq.launcherly.common.widgets
 
 import androidx.compose.foundation.layout.size
+import androidx.compose.material3.CircularWavyProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
-import androidx.compose.material3.LoadingIndicator
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -13,10 +13,11 @@ import com.rofiq.launcherly.common.color.TVColors
 @Composable
 fun LoadingIndicator(
     color: Color = TVColors.OnSurfaceSecondary,
-    size: Int = 45
+    size: Int = 35
 ) {
-    LoadingIndicator(
-        color = color,
-        modifier = Modifier.size(size.dp)
+    CircularWavyProgressIndicator(
+        modifier = Modifier
+            .size(size.dp),
+        color = color
     )
 }

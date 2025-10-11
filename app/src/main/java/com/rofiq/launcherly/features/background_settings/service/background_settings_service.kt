@@ -1,19 +1,24 @@
 package com.rofiq.launcherly.features.background_settings.service
 
+import android.content.ContentUris
 import android.content.Context
 import android.net.Uri
+import android.provider.MediaStore
+import androidx.media3.common.util.Log
 import com.rofiq.launcherly.core.shared_prefs_helper.SharedPrefsHelper
 import com.rofiq.launcherly.features.background_settings.model.BackgroundSetting
 import com.rofiq.launcherly.features.background_settings.model.BackgroundType
 import com.rofiq.launcherly.features.background_settings.model.BackgroundSourceType
 import com.rofiq.launcherly.features.background_settings.model.BackgroundDefaults
+import com.rofiq.launcherly.features.background_settings.model.MediaItemModel
 import com.rofiq.launcherly.features.background_settings.utils.LocalFileUtils
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 class BackgroundSettingsService @Inject constructor(
-    private val sharedPrefsHelper: SharedPrefsHelper
+    private val sharedPrefsHelper: SharedPrefsHelper,
+    private val context: Context
 ) {
 
     companion object {
@@ -100,6 +105,43 @@ class BackgroundSettingsService @Inject constructor(
                 false
             }
         }
+    }
+
+    fun fetchFileFromMediaStore(): List<MediaItemModel> {
+        val mediaList = mutableListOf<MediaItemModel>()
+        val projection = arrayOf(
+            MediaStore.Files.FileColumns._ID,
+            MediaStore.Files.FileColumns.MEDIA_TYPE
+        )
+
+        val selection = "${MediaStore.Files.FileColumns.MEDIA_TYPE} = ? OR ${MediaStore.Files.FileColumns.MEDIA_TYPE} = ?"
+        val selectionArgs = arrayOf(
+            MediaStore.Files.FileColumns.MEDIA_TYPE_IMAGE.toString(),
+            MediaStore.Files.FileColumns.MEDIA_TYPE_VIDEO.toString()
+        )
+
+        val sortOrder = "${MediaStore.Files.FileColumns.DATE_ADDED} DESC"
+
+        val queryUri = MediaStore.Files.getContentUri("external")
+
+        context.contentResolver.query(
+            queryUri,
+            projection,
+            selection,
+            selectionArgs,
+            sortOrder
+        )?.use { cursor ->
+            val idColumn = cursor.getColumnIndexOrThrow(MediaStore.Files.FileColumns._ID)
+            val mediaTypeColumn = cursor.getColumnIndexOrThrow(MediaStore.Files.FileColumns.MEDIA_TYPE)
+
+            while (cursor.moveToNext()) {
+                val id = cursor.getLong(idColumn)
+                val mediaType = cursor.getInt(mediaTypeColumn)
+                val contentUri = ContentUris.withAppendedId(queryUri, id)
+                mediaList.add(MediaItemModel(contentUri, mediaType, ""))
+            }
+        }
+        return mediaList
     }
 
     fun getAvailableBackgrounds(): List<BackgroundSetting> {
