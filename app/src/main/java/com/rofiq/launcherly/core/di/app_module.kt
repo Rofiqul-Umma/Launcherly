@@ -78,8 +78,8 @@ object AppModule {
 
     @Provides
     @Singleton
-    fun provideBackgroundSettingsService(sharedPrefs: SharedPrefsHelper): BackgroundSettingsService {
-        return BackgroundSettingsService(sharedPrefs)
+    fun provideBackgroundSettingsService(sharedPrefs: SharedPrefsHelper, @ApplicationContext context: Context): BackgroundSettingsService {
+        return BackgroundSettingsService(sharedPrefs, context)
     }
 
     @Provides
