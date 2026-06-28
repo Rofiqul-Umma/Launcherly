@@ -71,6 +71,8 @@ import com.rofiq.launcherly.features.background_settings.model.BackgroundType
 import com.rofiq.launcherly.features.background_settings.model.MediaItemModel
 import com.rofiq.launcherly.features.background_settings.view_model.BackgroundSettingsLoaded
 import com.rofiq.launcherly.features.background_settings.view_model.BackgroundSettingsViewModel
+import com.rofiq.launcherly.features.background_settings.view_model.FetchMediaStoreEmpty
+import com.rofiq.launcherly.features.background_settings.view_model.FetchMediaStoreError
 import com.rofiq.launcherly.features.background_settings.view_model.FetchMediaStoreLoading
 import com.rofiq.launcherly.features.background_settings.view_model.FetchMediaStoreSuccess
 
@@ -84,7 +86,7 @@ fun TVFilePicker(
     var mediaFiles by remember { mutableStateOf<List<MediaItemModel>>(emptyList()) }
     var permissionsGranted by remember { mutableStateOf(false) }
 
-    val backgroundState = backgroundVM.backgroundSettingsState.collectAsState()
+    val backgroundState by backgroundVM.backgroundSettingsState.collectAsState()
 
     val permissionsToRequest = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
         arrayOf(
@@ -113,23 +115,22 @@ fun TVFilePicker(
     }
 
     LaunchedEffect(backgroundState) {
-        when (backgroundState.value) {
+        when (val state = backgroundState) {
             is FetchMediaStoreLoading -> {
                 Log.d("FetchMediaStoreLoading", "FetchMediaStoreLoading")
             }
 
             is FetchMediaStoreSuccess -> {
-                mediaFiles = (backgroundState.value as FetchMediaStoreSuccess).data.map {
-                    MediaItemModel(
-                        it.uri,
-                        it.mediaType,
-                        it.path
-                    )
-                }
+                mediaFiles = state.data
+            }
+
+            is FetchMediaStoreEmpty, is FetchMediaStoreError -> {
+                mediaFiles = emptyList()
             }
 
             else -> {
-                mediaFiles = emptyList()
+                // Ignore non-media states (e.g. BackgroundSettingsLoaded) so they
+                // don't clobber an already-loaded media list.
             }
         }
     }
@@ -255,9 +256,9 @@ fun TVFileGrid(
     ) {
         itemsIndexed(mediaFiles) { index, mediaItem ->
             val isFocused = focusedIndex == index
-            print("Media local: " + mediaItem.path)
-            isSelected =
-                mediaItem.path == (backgroundState as BackgroundSettingsLoaded).currentBackground.resourcePath
+            val currentBackgroundPath =
+                (backgroundState as? BackgroundSettingsLoaded)?.currentBackground?.resourcePath
+            isSelected = currentBackgroundPath != null && mediaItem.path == currentBackgroundPath
 
             Box(
                 modifier = Modifier

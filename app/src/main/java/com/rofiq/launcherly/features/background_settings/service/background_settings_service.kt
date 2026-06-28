@@ -3,6 +3,7 @@ package com.rofiq.launcherly.features.background_settings.service
 import android.content.ContentUris
 import android.content.Context
 import android.net.Uri
+import android.os.Build
 import android.provider.MediaStore
 import androidx.media3.common.util.Log
 import com.rofiq.launcherly.core.shared_prefs_helper.SharedPrefsHelper
@@ -108,40 +109,59 @@ class BackgroundSettingsService @Inject constructor(
     }
 
     fun fetchFileFromMediaStore(): List<MediaItemModel> {
+        // Query the dedicated Images and Video collections separately. On Android 13+
+        // the granular READ_MEDIA_IMAGES / READ_MEDIA_VIDEO permissions only grant
+        // visibility into these collections, not the aggregated MediaStore.Files table.
         val mediaList = mutableListOf<MediaItemModel>()
-        val projection = arrayOf(
-            MediaStore.Files.FileColumns._ID,
-            MediaStore.Files.FileColumns.MEDIA_TYPE
-        )
-
-        val selection = "${MediaStore.Files.FileColumns.MEDIA_TYPE} = ? OR ${MediaStore.Files.FileColumns.MEDIA_TYPE} = ?"
-        val selectionArgs = arrayOf(
-            MediaStore.Files.FileColumns.MEDIA_TYPE_IMAGE.toString(),
-            MediaStore.Files.FileColumns.MEDIA_TYPE_VIDEO.toString()
-        )
-
-        val sortOrder = "${MediaStore.Files.FileColumns.DATE_ADDED} DESC"
-
-        val queryUri = MediaStore.Files.getContentUri("external")
-
-        context.contentResolver.query(
-            queryUri,
-            projection,
-            selection,
-            selectionArgs,
-            sortOrder
-        )?.use { cursor ->
-            val idColumn = cursor.getColumnIndexOrThrow(MediaStore.Files.FileColumns._ID)
-            val mediaTypeColumn = cursor.getColumnIndexOrThrow(MediaStore.Files.FileColumns.MEDIA_TYPE)
-
-            while (cursor.moveToNext()) {
-                val id = cursor.getLong(idColumn)
-                val mediaType = cursor.getInt(mediaTypeColumn)
-                val contentUri = ContentUris.withAppendedId(queryUri, id)
-                mediaList.add(MediaItemModel(contentUri, mediaType, ""))
-            }
+        for (volumeName in getMediaVolumeNames()) {
+            queryMediaCollection(
+                MediaStore.Images.Media.getContentUri(volumeName),
+                MediaStore.Files.FileColumns.MEDIA_TYPE_IMAGE,
+                mediaList
+            )
+            queryMediaCollection(
+                MediaStore.Video.Media.getContentUri(volumeName),
+                MediaStore.Files.FileColumns.MEDIA_TYPE_VIDEO,
+                mediaList
+            )
         }
         return mediaList
+    }
+
+    /**
+     * Returns every mounted media volume (primary shared storage plus any removable
+     * USB/SD volumes). On API < 29 only the primary "external" volume is available.
+     */
+    private fun getMediaVolumeNames(): Set<String> {
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            MediaStore.getExternalVolumeNames(context)
+        } else {
+            setOf("external")
+        }
+    }
+
+    private fun queryMediaCollection(
+        collectionUri: Uri,
+        mediaType: Int,
+        output: MutableList<MediaItemModel>
+    ) {
+        val projection = arrayOf(MediaStore.MediaColumns._ID)
+        val sortOrder = "${MediaStore.MediaColumns.DATE_ADDED} DESC"
+
+        context.contentResolver.query(
+            collectionUri,
+            projection,
+            null,
+            null,
+            sortOrder
+        )?.use { cursor ->
+            val idColumn = cursor.getColumnIndexOrThrow(MediaStore.MediaColumns._ID)
+            while (cursor.moveToNext()) {
+                val id = cursor.getLong(idColumn)
+                val contentUri = ContentUris.withAppendedId(collectionUri, id)
+                output.add(MediaItemModel(contentUri, mediaType, contentUri.toString()))
+            }
+        }
     }
 
     fun getAvailableBackgrounds(): List<BackgroundSetting> {
