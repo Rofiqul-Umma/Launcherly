@@ -13,6 +13,7 @@ import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
 import androidx.media3.common.util.Log
 import androidx.media3.common.util.UnstableApi
+import androidx.media3.exoplayer.DefaultLoadControl
 import androidx.media3.exoplayer.ExoPlayer
 import coil.ImageLoader
 import com.rofiq.launcherly.features.background_settings.model.BackgroundSetting
@@ -174,7 +175,19 @@ class BackgroundSettingsViewModel @Inject constructor(
         // Create new player only if needed
         if (_exoPlayer.value == null) {
             currentPlayerUrl = videoUrl
-            val player = ExoPlayer.Builder(context.applicationContext).build().apply {
+            // A looping wallpaper only needs a tiny buffer; the default load control
+            // reserves up to ~50s of decoded video, which can OOM on high-bitrate clips.
+            val loadControl = DefaultLoadControl.Builder()
+                .setBufferDurationsMs(
+                    5_000,
+                    10_000,
+                    DefaultLoadControl.DEFAULT_BUFFER_FOR_PLAYBACK_MS,
+                    DefaultLoadControl.DEFAULT_BUFFER_FOR_PLAYBACK_AFTER_REBUFFER_MS
+                )
+                .build()
+            val player = ExoPlayer.Builder(context.applicationContext)
+                .setLoadControl(loadControl)
+                .build().apply {
                 val mediaItem = MediaItem.fromUri(videoUrl.toUri())
                 setMediaItem(mediaItem)
                 repeatMode = Player.REPEAT_MODE_ONE

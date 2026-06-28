@@ -64,6 +64,8 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import coil.ImageLoader
 import coil.compose.SubcomposeAsyncImage
+import coil.request.ImageRequest
+import coil.size.Scale
 import com.rofiq.launcherly.common.color.TVColors
 import com.rofiq.launcherly.common.text_style.TVTypography
 import com.rofiq.launcherly.common.widgets.LoadingIndicator
@@ -300,7 +302,14 @@ fun TVFileGrid(
                     )
             ) {
                 SubcomposeAsyncImage(
-                    model = mediaItem.uri,
+                    model = ImageRequest.Builder(LocalContext.current)
+                        .data(mediaItem.uri)
+                        // Cap the decoded frame so 4K source videos don't allocate
+                        // full-resolution bitmaps for every grid cell.
+                        .size(256)
+                        .scale(Scale.FILL)
+                        .crossfade(true)
+                        .build(),
                     imageLoader = imageLoader,
                     contentDescription = null,
                     modifier = Modifier

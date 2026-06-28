@@ -3,6 +3,7 @@ package com.rofiq.launcherly.core.di
 import android.content.Context
 import coil.ImageLoader
 import coil.decode.VideoFrameDecoder
+import coil.memory.MemoryCache
 import com.rofiq.launcherly.core.shared_prefs_helper.SharedPrefsHelper
 import com.rofiq.launcherly.features.auth.service.AuthService
 import com.rofiq.launcherly.features.background_settings.service.BackgroundSettingsService
@@ -31,6 +32,14 @@ object AppModule {
         return ImageLoader.Builder(context)
             .components {
                 add(VideoFrameDecoder.Factory())
+            }
+            // Decode thumbnails as RGB_565 (2 bytes/px instead of 4) and cap the
+            // in-memory bitmap cache so decoding many video frames can't exhaust the heap.
+            .allowRgb565(true)
+            .memoryCache {
+                MemoryCache.Builder(context)
+                    .maxSizePercent(0.15)
+                    .build()
             }
             .build()
     }
