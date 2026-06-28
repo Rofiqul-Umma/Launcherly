@@ -21,10 +21,10 @@
     <application
         android:name=".LauncherlyApp"
         android:icon="@mipmap/ic_launcher"
+        android:banner="@mipmap/ic_banner"
         android:label="@string/app_name"
         android:supportsRtl="true"
-        android:theme="@style/Theme.Launcherly"
-        android:banner="@mipmap/ic_launcher">
+        android:theme="@style/Theme.Launcherly">
         <activity
             android:name=".MainActivity"
             android:exported="true"
