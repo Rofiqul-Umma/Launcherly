@@ -7,6 +7,7 @@ import com.rofiq.launcherly.core.shared_prefs_helper.SharedPrefsHelper
 import com.rofiq.launcherly.features.auth.service.AuthService
 import com.rofiq.launcherly.features.background_settings.service.BackgroundSettingsService
 import com.rofiq.launcherly.features.check_internet.service.CheckInternetService
+import com.rofiq.launcherly.features.clock_settings.service.ClockSettingsService
 import com.rofiq.launcherly.features.device_manager.service.DeviceManagerService
 import com.rofiq.launcherly.features.favorite_apps.service.FavoriteAppsService
 import com.rofiq.launcherly.features.fetch_date_time.service.FetchDateTimeService
@@ -48,8 +49,14 @@ object AppModule {
 
     @Provides
     @Singleton
-    fun provideFetchDateTimeService(): FetchDateTimeService {
-        return FetchDateTimeService()
+    fun provideClockSettingsService(sharedPrefs: SharedPrefsHelper): ClockSettingsService {
+        return ClockSettingsService(sharedPrefs)
+    }
+
+    @Provides
+    @Singleton
+    fun provideFetchDateTimeService(clockSettingsService: ClockSettingsService): FetchDateTimeService {
+        return FetchDateTimeService(clockSettingsService)
     }
 
     @Provides

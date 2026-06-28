@@ -18,7 +18,11 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Apps
+import androidx.compose.material.icons.filled.CalendarMonth
+import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material.icons.filled.Wallpaper
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -26,6 +30,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
@@ -47,8 +52,10 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.rofiq.launcherly.common.color.TVColors
 import com.rofiq.launcherly.common.text_style.TVTypography
+import com.rofiq.launcherly.features.clock_settings.view_model.ClockSettingsViewModel
 import com.rofiq.launcherly.features.device_manager.view_model.DeviceManagerViewModel
-import com.rofiq.launcherly.features.home.view_model.HomeViewModel
+import java.text.SimpleDateFormat
+import java.util.Locale
 
 data class SettingsItem(
     val title: String,
@@ -60,8 +67,11 @@ data class SettingsItem(
 @Composable
 fun GuidedSettingsStep(
     deviceManagerVM: DeviceManagerViewModel = hiltViewModel(),
+    clockSettingsVM: ClockSettingsViewModel = hiltViewModel(),
     navController: NavController
 ) {
+    val clockSettings by clockSettingsVM.settings.collectAsState()
+
     val settingsItems = listOf(
         SettingsItem(
             title = "System Settings",
@@ -80,6 +90,28 @@ fun GuidedSettingsStep(
             description = "Select apps to display on home screen",
             icon = Icons.Default.Apps,
             action = { navController.navigate("favorite_apps_settings") }
+        ),
+        SettingsItem(
+            title = "Clock Format",
+            description = "${clockSettings.clockStyle.label} · ${
+                formatExample(clockSettings.clockStyle.pattern)
+            }",
+            icon = Icons.Default.Schedule,
+            action = { clockSettingsVM.cycleClockStyle() }
+        ),
+        SettingsItem(
+            title = "Date Format",
+            description = "${clockSettings.dateStyle.label} · ${
+                formatExample(clockSettings.dateStyle.pattern)
+            }",
+            icon = Icons.Default.CalendarMonth,
+            action = { clockSettingsVM.cycleDateStyle() }
+        ),
+        SettingsItem(
+            title = "Show Clock & Date",
+            description = if (clockSettings.hideDateTime) "Off" else "On",
+            icon = if (clockSettings.hideDateTime) Icons.Default.VisibilityOff else Icons.Default.Visibility,
+            action = { clockSettingsVM.toggleHideDateTime() }
         )
     )
 
@@ -248,4 +280,8 @@ fun SettingsButton(
             }
         }
     }
+}
+
+private fun formatExample(pattern: String): String {
+    return SimpleDateFormat(pattern, Locale.getDefault()).format(java.util.Date())
 }

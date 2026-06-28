@@ -23,6 +23,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -48,6 +49,7 @@ import com.rofiq.launcherly.common.text_style.TVTypography
 import com.rofiq.launcherly.common.widgets.LoadingIndicator
 import com.rofiq.launcherly.features.background_settings.view.DynamicBackground
 import com.rofiq.launcherly.features.check_internet.view_model.CheckInternetIsConnected
+import com.rofiq.launcherly.features.clock_settings.view_model.ClockSettingsViewModel
 import com.rofiq.launcherly.features.check_internet.view_model.CheckInternetViewModel
 import com.rofiq.launcherly.features.device_manager.view_model.DeviceManagerViewModel
 import com.rofiq.launcherly.features.fetch_date_time.view_model.FetchDateTimeLoading
@@ -64,11 +66,17 @@ fun HomePage(
     homeVM: HomeViewModel = hiltViewModel(),
     dateTimeVM: FetchDateTimeViewModel = hiltViewModel() ,
     checkInternetVM: CheckInternetViewModel = hiltViewModel(),
-     deviceManagerVM: DeviceManagerViewModel = hiltViewModel()
+     deviceManagerVM: DeviceManagerViewModel = hiltViewModel(),
+    clockSettingsVM: ClockSettingsViewModel = hiltViewModel()
 ) {
 
     val fetchDateTimeState = dateTimeVM.fetchDateTimeState.collectAsState()
     val checkInternetState = checkInternetVM.checkInternetState.collectAsState()
+    val clockSettings by clockSettingsVM.settings.collectAsState()
+
+    LaunchedEffect(clockSettings.clockStyle, clockSettings.dateStyle) {
+        dateTimeVM.fetchCurrentDateTime()
+    }
 
     val settingsFocusRequester = remember { FocusRequester() }
     val wifiFocusRequester = remember { FocusRequester() }
@@ -127,18 +135,20 @@ fun HomePage(
                     Column(
                         horizontalAlignment = Alignment.Start
                     ) {
-                        when (fetchDateTimeState.value) {
-                            is FetchDateTimeLoading -> LoadingIndicator()
-                            is FetchDateTimeSuccess -> {
-                                Text(
-                                    text = (fetchDateTimeState.value as FetchDateTimeSuccess).dateTime.time,
-                                    style = TVTypography.HeaderLarge.copy(color = TVColors.OnSurface, fontSize = 35.sp)
-                                )
+                        if (!clockSettings.hideDateTime) {
+                            when (fetchDateTimeState.value) {
+                                is FetchDateTimeLoading -> LoadingIndicator()
+                                is FetchDateTimeSuccess -> {
+                                    Text(
+                                        text = (fetchDateTimeState.value as FetchDateTimeSuccess).dateTime.time,
+                                        style = TVTypography.HeaderLarge.copy(color = TVColors.OnSurface, fontSize = 35.sp)
+                                    )
 
-                                Text(
-                                    text = (fetchDateTimeState.value as FetchDateTimeSuccess).dateTime.date,
-                                    style = TVTypography.BodyLarge.copy(color = TVColors.OnSurface)
-                                )
+                                    Text(
+                                        text = (fetchDateTimeState.value as FetchDateTimeSuccess).dateTime.date,
+                                        style = TVTypography.BodyLarge.copy(color = TVColors.OnSurface)
+                                    )
+                                }
                             }
                         }
                     }
