@@ -197,11 +197,14 @@ object BackgroundDefaults {
             sourceType = BackgroundSourceType.URL,
             resourcePath = "https://drive.google.com/file/d/1JKf7cxO89ZQsoTten6cnnQOZH6pcN-rk/view?usp=drive_link",
             name = "Image"
+        ),
+
+        BackgroundSetting(
+            type = BackgroundType.IMAGE,
+            sourceType = BackgroundSourceType.URL,
+            resourcePath = "https://drive.google.com/file/d/10Nv9912Fc0GyQwhVL3A2eC-9B9Xrj1n2/view?usp=sharing",
+            name = "Image"
         )
-
-
-
-
     )
     
     fun getAllBackgrounds() : List<BackgroundSetting> {
