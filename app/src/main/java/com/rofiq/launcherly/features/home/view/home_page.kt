@@ -40,6 +40,7 @@ import androidx.compose.ui.input.key.KeyEventType
 import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onKeyEvent
 import androidx.compose.ui.input.key.type
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -201,7 +202,8 @@ fun HomePage(
                                 Text(
                                     text = if (showAllApps) "Favorite apps" else "All apps",
                                     color = TVColors.OnSurface,
-                                    modifier = Modifier.padding(top = 4.dp)
+                                    modifier = Modifier.padding(top = 4.dp),
+                                    fontSize = 12.sp,
                                 )
                             }
                         }
@@ -241,7 +243,8 @@ fun HomePage(
                                 Text(
                                     text = "Settings",
                                     color = TVColors.OnSurface,
-                                    modifier = Modifier.padding(top = 4.dp)
+                                    modifier = Modifier.padding(top = 4.dp),
+                                    fontSize = 12.sp,
                                 )
                             }
                         }
@@ -281,7 +284,8 @@ fun HomePage(
                                 Text(
                                     text = "Network",
                                     color = TVColors.OnSurface,
-                                    modifier = Modifier.padding(top = 4.dp)
+                                    modifier = Modifier.padding(top = 4.dp),
+                                    fontSize = 12.sp,
                                 )
                             }
                         }
