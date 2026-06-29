@@ -3,10 +3,14 @@ package com.rofiq.launcherly.features.home.view.component
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.util.Log
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Spring
-import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.focusable
 import androidx.compose.foundation.layout.Arrangement
@@ -14,6 +18,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -35,6 +40,7 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.KeyEventType
@@ -42,6 +48,7 @@ import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onKeyEvent
 import androidx.compose.ui.input.key.type
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.palette.graphics.Palette
 import com.rofiq.launcherly.common.color.TVColors
@@ -107,15 +114,26 @@ fun ListApps(
                         horizontalArrangement = Arrangement.Center,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        itemsIndexed(apps) { index, app ->
+                        itemsIndexed(
+                            apps,
+                            key = { _, app -> app.packageName }
+                        ) { index, app ->
                             val isFirst = index == 0
                             val isLast = index == apps.lastIndex
                             val appListFocusRequester =
                                 if (isFirst) firstAppFocusRequester else remember { FocusRequester() }
                             val appListFocused = remember { mutableStateOf(false) }
-                            val imageSize = animateDpAsState(
-                                targetValue = if (appListFocused.value) 90.dp else 70.dp,
-                                label = "AppIconSize"
+                            // Scale the icon via graphicsLayer (draw-phase only) instead of
+                            // animating layout size. Animating Modifier.size() forces the LazyRow
+                            // to re-measure every frame, which fights the scroll and causes jank.
+                            // graphicsLayer keeps layout fixed so scrolling stays smooth.
+                            val iconScale by animateFloatAsState(
+                                targetValue = if (appListFocused.value) 1f else 70f / 90f,
+                                animationSpec = spring(
+                                    dampingRatio = Spring.DampingRatioNoBouncy,
+                                    stiffness = Spring.StiffnessMediumLow
+                                ),
+                                label = "AppIconScale"
                             )
                             // Soft glow halo alpha — spring-animated for a fluid fade in/out
                             val glowAlpha by animateFloatAsState(
@@ -152,27 +170,28 @@ fun ListApps(
                                 dominantColor = color
                             }
                             val glowColor = dominantColor ?: TVColors.OnSurface
+                            // Hoist the gradient brush so it's rebuilt only when the dominant color
+                            // changes, not on every draw frame during scroll (avoids GC churn). The
+                            // animated glowAlpha is applied via drawCircle's alpha parameter instead.
+                            val glowBrush = remember(glowColor) {
+                                Brush.radialGradient(
+                                    colors = listOf(
+                                        glowColor.copy(alpha = 0.55f),
+                                        glowColor.copy(alpha = 0.18f),
+                                        Color.Transparent
+                                    )
+                                )
+                            }
                             Column(
                                 horizontalAlignment = Alignment.CenterHorizontally,
                                 modifier = Modifier
                                     .drawBehind {
                                         if (glowAlpha > 0.01f) {
-                                            // drawCircle gives a naturally circular glow with no
-                                            // rectangular edges. Gradient radius matches the circle
-                                            // radius so the glow fully fades to transparent at the edge.
-                                            val glowRadius = size.minDimension / 2f
                                             drawCircle(
+                                                brush = glowBrush,
                                                 center = center,
-                                                radius = glowRadius,
-                                                brush = Brush.radialGradient(
-                                                    colors = listOf(
-                                                        glowColor.copy(alpha = 0.55f * glowAlpha),
-                                                        glowColor.copy(alpha = 0.18f * glowAlpha),
-                                                        Color.Transparent
-                                                    ),
-                                                    center = center,
-                                                    radius = glowRadius
-                                                )
+                                                radius = size.minDimension / 2f,
+                                                alpha = glowAlpha
                                             )
                                         }
                                     }
@@ -199,9 +218,31 @@ fun ListApps(
                                     model = app.icon,
                                     contentDescription = app.name,
                                     modifier = Modifier
-                                        .size(imageSize.value)
+                                        .size(90.dp)
                                         .padding(10.dp)
+                                        .graphicsLayer {
+                                            scaleX = iconScale
+                                            scaleY = iconScale
+                                        }
                                 )
+                                AnimatedVisibility(
+                                    visible = appListFocused.value,
+                                    enter = fadeIn() + expandVertically(),
+                                    exit = fadeOut() + shrinkVertically()
+                                ) {
+                                    Text(
+                                        text = app.name,
+                                        style = TVTypography.BodySmall.copy(
+                                            color = TVColors.OnSurface,
+                                            textAlign = TextAlign.Center
+                                        ),
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis,
+                                        modifier = Modifier
+                                            .padding(top = 2.dp, bottom = 4.dp)
+                                            .widthIn(max = 110.dp)
+                                    )
+                                }
                             }
                         }
                     }
