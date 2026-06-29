@@ -78,6 +78,11 @@ dependencies {
     implementation(libs.coil.compose)
     implementation(libs.coil.video)
 
+    // Glide (background settings image loading — lighter bitmap pooling for low-end TV)
+    implementation(libs.glide)
+    implementation(libs.glide.compose)
+    kapt(libs.glide.compiler)
+
     // Palette (dominant color extraction for glow)
     implementation(libs.androidx.palette.ktx)
 

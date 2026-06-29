@@ -62,13 +62,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
-import coil.ImageLoader
-import coil.compose.SubcomposeAsyncImage
-import coil.request.ImageRequest
-import coil.size.Scale
+import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
+import com.bumptech.glide.integration.compose.GlideImage
 import com.rofiq.launcherly.common.color.TVColors
 import com.rofiq.launcherly.common.text_style.TVTypography
-import com.rofiq.launcherly.common.widgets.LoadingIndicator
 import com.rofiq.launcherly.features.background_settings.model.BackgroundType
 import com.rofiq.launcherly.features.background_settings.model.MediaItemModel
 import com.rofiq.launcherly.features.background_settings.view_model.BackgroundSettingsLoaded
@@ -208,8 +205,7 @@ fun TVFilePicker(
                                 }
                             }
                         }
-                    },
-                    imageLoader = backgroundVM.imageLoader
+                    }
                 )
             }
         } else {
@@ -228,12 +224,15 @@ fun TVFilePicker(
     }
 }
 
-@OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3ExpressiveApi::class)
+@OptIn(
+    ExperimentalFoundationApi::class,
+    ExperimentalMaterial3ExpressiveApi::class,
+    ExperimentalGlideComposeApi::class
+)
 @Composable
 fun TVFileGrid(
     mediaFiles: List<MediaItemModel>,
     onMediaSelected: (MediaItemModel) -> Unit,
-    imageLoader: ImageLoader,
     backgroundVM: BackgroundSettingsViewModel = hiltViewModel()
 ) {
     var focusedIndex by remember { mutableIntStateOf(0) }
@@ -301,43 +300,31 @@ fun TVFileGrid(
                         }
                     )
             ) {
-                SubcomposeAsyncImage(
-                    model = ImageRequest.Builder(LocalContext.current)
-                        .data(mediaItem.uri)
-                        // Cap the decoded frame so 4K source videos don't allocate
-                        // full-resolution bitmaps for every grid cell.
-                        .size(256)
-                        .scale(Scale.FILL)
-                        .crossfade(true)
-                        .build(),
-                    imageLoader = imageLoader,
+                // Video icon sits behind the frame as the fallback shown during load and
+                // if decoding fails; the opaque thumbnail covers it once ready. Glide
+                // decodes the frame from the content Uri natively, and override(256) caps
+                // the decode so 4K sources don't allocate full-resolution bitmaps per cell.
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.VideoLibrary,
+                        contentDescription = "Video",
+                        tint = TVColors.OnSurface,
+                        modifier = Modifier.size(48.dp)
+                    )
+                }
+                GlideImage(
+                    model = mediaItem.uri,
                     contentDescription = null,
                     modifier = Modifier
                         .fillMaxSize()
                         .clip(RoundedCornerShape(8.dp)),
                     contentScale = ContentScale.Crop,
-                    loading = {
-                        Box(
-                            modifier = Modifier.fillMaxSize(),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            LoadingIndicator()
-                        }
-                    },
-                    error = {
-                        Box(
-                            modifier = Modifier.fillMaxSize(),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.VideoLibrary,
-                                contentDescription = "Video",
-                                tint = TVColors.OnSurface,
-                                modifier = Modifier.size(48.dp)
-                            )
-                        }
-                    }
-                )
+                ) { requestBuilder ->
+                    requestBuilder.override(256)
+                }
 
                 if (isSelected) {
                     Box(

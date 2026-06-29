@@ -1,7 +1,7 @@
 package com.rofiq.launcherly.features.background_settings.view
 
-import android.graphics.Bitmap
-import android.graphics.Canvas
+import android.graphics.drawable.BitmapDrawable
+import android.graphics.drawable.Drawable
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -64,11 +64,12 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
-import coil.compose.SubcomposeAsyncImage
-import coil.imageLoader
-import coil.request.CachePolicy
-import coil.request.ImageRequest
-import coil.request.SuccessResult
+import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
+import com.bumptech.glide.integration.compose.GlideImage
+import com.bumptech.glide.load.DataSource
+import com.bumptech.glide.load.engine.GlideException
+import com.bumptech.glide.request.RequestListener
+import com.bumptech.glide.request.target.Target
 import androidx.palette.graphics.Palette
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -208,18 +209,13 @@ fun BackgroundCard(
     onFocusChanged: (Boolean) -> Unit,
     onSelected: () -> Unit,
 ) {
-    val generateVideoThumbVM: GenerateVideoThumbnailsViewModel = hiltViewModel(
-        key = background.resourcePath
-    )
-
-    // Generate thumbnail for this specific video when the card is first composed
-    LaunchedEffect(background) {
-        generateVideoThumbVM.generateThumbnailForVideo(background.resourcePath)
+    // Dominant color for the glow halo. Sampled from the SAME bitmap each preview
+    // already decoded for display (image -> Glide load listener; video -> generated
+    // thumbnail), so there is no second network/decode pass per card. Falls back to
+    // OnSurface until a color arrives. Keyed by resourcePath so it resets per app.
+    var dominantColor by remember(background.resourcePath) {
+        mutableStateOf<Color?>(null)
     }
-
-    val generateThumbState = generateVideoThumbVM.generateVideoThumbState.collectAsState()
-
-    val context = LocalContext.current
 
     // MD3-style fluid focus animation: scale + border width spring
     val focusScale by animateFloatAsState(
@@ -248,43 +244,6 @@ fun BackgroundCard(
         label = "cardGlow"
     )
 
-    // Dominant color from the card's image. Two sources handled:
-    //  - generated video thumbnail (already an in-memory Bitmap)
-    //  - IMAGE type URL (loaded via Coil, off main thread)
-    // Falls back to OnSurface while loading or on failure.
-    var dominantColor by remember(background.resourcePath) {
-        mutableStateOf<Color?>(null)
-    }
-    LaunchedEffect(generateThumbState.value) {
-        val thumb = generateThumbState.value ?: return@LaunchedEffect
-        val color = withContext(Dispatchers.Default) {
-            runCatching {
-                Color(Palette.from(thumb).generate().getDominantColor(TVColors.OnSurface.toArgb()))
-            }.getOrDefault(TVColors.OnSurface)
-        }
-        dominantColor = color
-    }
-    LaunchedEffect(background.type, background.directUrl) {
-        if (background.type != BackgroundType.IMAGE) return@LaunchedEffect
-        val url = background.directUrl
-        val color = withContext(Dispatchers.Default) {
-            runCatching {
-                val request = ImageRequest.Builder(context)
-                    .data(url)
-                    .size(96)
-                    .allowHardware(false) // Palette needs a software bitmap
-                    .build()
-                val drawable = (context.imageLoader.execute(request) as? SuccessResult)?.drawable
-                    ?: return@runCatching TVColors.OnSurface
-                val bmp = Bitmap.createBitmap(96, 96, Bitmap.Config.ARGB_8888)
-                val canvas = Canvas(bmp)
-                drawable.setBounds(0, 0, 96, 96)
-                drawable.draw(canvas)
-                Color(Palette.from(bmp).generate().getDominantColor(TVColors.OnSurface.toArgb()))
-            }.getOrDefault(TVColors.OnSurface)
-        }
-        dominantColor = color
-    }
     val glowColor = dominantColor ?: TVColors.OnSurface
 
     // Outer wrapper owns the focus scale + glow halo. The card is inset with a
@@ -341,94 +300,19 @@ fun BackgroundCard(
             shape = RoundedCornerShape(12.dp)
         ) {
             Box(modifier = Modifier.fillMaxSize()) {
-            // Background preview
+            // Background preview. Each branch owns its own loading so image cards never
+            // spin up the video-thumbnail ViewModel (and vice versa), and feeds the glow
+            // its dominant color from the bitmap it already decoded.
             when (background.type) {
-                BackgroundType.IMAGE -> {
-                    // Use AsyncImage for better caching and lifecycle handling
-                    SubcomposeAsyncImage (
-                        model = coil.request.ImageRequest.Builder(context)
-                            .data(background.directUrl)
-                            .crossfade(true)
-                            .memoryCachePolicy(CachePolicy.ENABLED)
-                            .diskCachePolicy(CachePolicy.ENABLED)
-                            .build(),
-                        contentDescription = background.name,
-                        loading = {
-                            Box(
-                                modifier = Modifier.fillMaxSize(),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                LoadingIndicator()
-                            }
-                        },
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .clip(RoundedCornerShape(12.dp)),
-                        contentScale = ContentScale.Crop
-                    )
-                }
+                BackgroundType.IMAGE -> ImageCardContent(
+                    background = background,
+                    onDominantColor = { dominantColor = it }
+                )
 
-                BackgroundType.VIDEO -> {
-                    // Video thumbnail placeholder
-                    Box(
-                        modifier = Modifier // ktlint-disable no-empty-glam-lambda
-                            .fillMaxSize()
-                            .background(TVColors.Surface),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        val thumbnail = generateThumbState.value
-                        if (thumbnail != null) {
-                            Image(
-                                bitmap = thumbnail.asImageBitmap(), // ktlint-disable indentation
-                                contentDescription = background.name,
-                                modifier = Modifier
-                                    .fillMaxSize()
-                                    .clip(RoundedCornerShape(12.dp)),
-                                contentScale = ContentScale.Crop
-                            )
-                        } else {
-                            // Try to load Google Drive thumbnail using Coil or use directUrl if available
-                            val thumbnailUrl =
-                                if (background.resourcePath.contains("drive.google.com")) {
-                                    GoogleDriveUtils.createThumbnailUrl(background.resourcePath)
-                                } else {
-                                    null
-                                }
-
-                            if (thumbnailUrl != null) {
-                                SubcomposeAsyncImage (
-                                    model = coil.request.ImageRequest.Builder(context)
-                                        .data(thumbnailUrl)
-                                        .crossfade(true)
-                                        .memoryCachePolicy(CachePolicy.ENABLED)
-                                        .diskCachePolicy(CachePolicy.ENABLED)
-                                        .build(),
-                                    contentDescription = background.name,
-                                    loading = {
-                                        Box(
-                                            modifier = Modifier.fillMaxSize(),
-                                            contentAlignment = Alignment.Center
-                                        ) {
-                                            LoadingIndicator()
-                                        }
-                                    },
-                                    modifier = Modifier
-                                        .fillMaxSize()
-                                        .clip(RoundedCornerShape(12.dp)),
-                                    contentScale = ContentScale.Crop,
-                                    // Fallback to video icon if thumbnail fails
-                                )
-                            } else {
-                                Icon(
-                                    imageVector = Icons.Default.VideoLibrary,
-                                    contentDescription = "Video",
-                                    tint = TVColors.OnSurface,
-                                    modifier = Modifier.size(32.dp) // ktlint-disable no-empty-glam-lambda
-                                )
-                            }
-                        }
-                    }
-                }
+                BackgroundType.VIDEO -> VideoCardContent(
+                    background = background,
+                    onDominantColor = { dominantColor = it }
+                )
             }
 
             // Selection indicator
@@ -470,6 +354,139 @@ fun BackgroundCard(
             }
         }
         }
+    }
+}
+
+@OptIn(ExperimentalGlideComposeApi::class, ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+private fun ImageCardContent(
+    background: BackgroundSetting,
+    onDominantColor: (Color) -> Unit,
+) {
+    Box(modifier = Modifier.fillMaxSize()) {
+        // Spinner sits behind the image; the opaque Crop-filled image covers it once
+        // loaded, so no separate placeholder API is needed.
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+            LoadingIndicator()
+        }
+        GlideImage(
+            model = background.directUrl,
+            contentDescription = background.name,
+            modifier = Modifier
+                .fillMaxSize()
+                .clip(RoundedCornerShape(12.dp)),
+            contentScale = ContentScale.Crop,
+        ) { requestBuilder ->
+            requestBuilder.listener(dominantColorListener(onDominantColor))
+        }
+    }
+}
+
+@OptIn(ExperimentalGlideComposeApi::class)
+@Composable
+private fun VideoCardContent(
+    background: BackgroundSetting,
+    onDominantColor: (Color) -> Unit,
+) {
+    // Per-video ViewModel only exists for video cards now, so the grid no longer
+    // creates ~17 unused thumbnail ViewModels for image cards.
+    val generateVideoThumbVM: GenerateVideoThumbnailsViewModel = hiltViewModel(
+        key = background.resourcePath
+    )
+    LaunchedEffect(background) {
+        generateVideoThumbVM.generateThumbnailForVideo(background.resourcePath)
+    }
+    val generateThumbState = generateVideoThumbVM.generateVideoThumbState.collectAsState()
+
+    // Dominant color from the in-memory thumbnail bitmap (no extra fetch).
+    LaunchedEffect(generateThumbState.value) {
+        val thumb = generateThumbState.value ?: return@LaunchedEffect
+        val color = withContext(Dispatchers.Default) {
+            runCatching {
+                Color(Palette.from(thumb).generate().getDominantColor(TVColors.OnSurface.toArgb()))
+            }.getOrDefault(TVColors.OnSurface)
+        }
+        onDominantColor(color)
+    }
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(TVColors.Surface),
+        contentAlignment = Alignment.Center
+    ) {
+        val thumbnail = generateThumbState.value
+        if (thumbnail != null) {
+            Image(
+                bitmap = thumbnail.asImageBitmap(),
+                contentDescription = background.name,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .clip(RoundedCornerShape(12.dp)),
+                contentScale = ContentScale.Crop
+            )
+        } else {
+            val thumbnailUrl =
+                if (background.resourcePath.contains("drive.google.com")) {
+                    GoogleDriveUtils.createThumbnailUrl(background.resourcePath)
+                } else {
+                    null
+                }
+            if (thumbnailUrl != null) {
+                GlideImage(
+                    model = thumbnailUrl,
+                    contentDescription = background.name,
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .clip(RoundedCornerShape(12.dp)),
+                    contentScale = ContentScale.Crop,
+                ) { requestBuilder ->
+                    requestBuilder.listener(dominantColorListener(onDominantColor))
+                }
+            } else {
+                Icon(
+                    imageVector = Icons.Default.VideoLibrary,
+                    contentDescription = "Video",
+                    tint = TVColors.OnSurface,
+                    modifier = Modifier.size(32.dp)
+                )
+            }
+        }
+    }
+}
+
+// Samples the dominant color from the bitmap Glide just decoded for display and
+// reports it back for the focus glow. Returns false so Glide still renders the image.
+// Palette's async generate() reads the bitmap off the main thread and the resource
+// stays alive while the card is on screen, so there's no recycle race.
+private fun dominantColorListener(
+    onColor: (Color) -> Unit,
+): RequestListener<Drawable> = object : RequestListener<Drawable> {
+    override fun onLoadFailed(
+        e: GlideException?,
+        model: Any?,
+        target: Target<Drawable>?,
+        isFirstResource: Boolean,
+    ): Boolean = false
+
+    override fun onResourceReady(
+        resource: Drawable,
+        model: Any,
+        target: Target<Drawable>?,
+        dataSource: DataSource,
+        isFirstResource: Boolean,
+    ): Boolean {
+        (resource as? BitmapDrawable)?.bitmap?.let { bmp ->
+            Palette.from(bmp).generate { palette ->
+                palette?.let {
+                    onColor(Color(it.getDominantColor(TVColors.OnSurface.toArgb())))
+                }
+            }
+        }
+        return false
     }
 }
 

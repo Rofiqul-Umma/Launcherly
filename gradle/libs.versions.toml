@@ -1,6 +1,8 @@
 [versions]
 agp = "9.2.1"
 coilCompose = "2.7.0"
+glide = "4.16.0"
+glideCompose = "1.0.0-beta09"
 gson = "2.13.2"
 kotlin = "2.2.10"
 coreKtx = "1.17.0"
@@ -45,6 +47,9 @@ androidx-material-icons-extended = { group = "androidx.compose.material", name =
 androidx-navigation-compose = { group = "androidx.navigation", name = "navigation-compose", version.ref = "navigationCompose" }
 coil-compose = { module = "io.coil-kt:coil-compose", version.ref = "coilCompose" }
 coil-video = { module = "io.coil-kt:coil-video", version.ref = "coilCompose" }
+glide = { module = "com.github.bumptech.glide:glide", version.ref = "glide" }
+glide-compose = { module = "com.github.bumptech.glide:compose", version.ref = "glideCompose" }
+glide-compiler = { module = "com.github.bumptech.glide:compiler", version.ref = "glide" }
 gson = { module = "com.google.code.gson:gson", version.ref = "gson" }
 hilt-android = { module = "com.google.dagger:hilt-android", version.ref = "hiltAndroid" }
 hilt-android-compiler = { module = "com.google.dagger:hilt-android-compiler", version.ref = "hiltAndroid" }

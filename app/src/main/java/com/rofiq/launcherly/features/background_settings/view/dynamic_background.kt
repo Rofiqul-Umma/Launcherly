@@ -23,10 +23,9 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.ui.AspectRatioFrameLayout
 import androidx.media3.ui.PlayerView
-import coil.compose.AsyncImage
-import coil.request.CachePolicy
-import coil.request.ImageRequest
-import coil.size.Scale
+import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
+import com.bumptech.glide.integration.compose.GlideImage
+import com.bumptech.glide.integration.compose.placeholder
 import com.rofiq.launcherly.R
 import com.rofiq.launcherly.features.background_settings.model.BackgroundSourceType
 import com.rofiq.launcherly.features.background_settings.model.BackgroundType
@@ -36,6 +35,7 @@ import com.rofiq.launcherly.features.background_settings.view_model.BackgroundSe
 import com.rofiq.launcherly.utils.GoogleDriveUtils
 
 @OptIn(UnstableApi::class)
+@kotlin.OptIn(ExperimentalGlideComposeApi::class)
 @Composable
 fun DynamicBackground(
     backgroundVM: BackgroundSettingsViewModel = hiltViewModel()
@@ -150,41 +150,25 @@ fun DynamicBackground(
 
             BackgroundType.IMAGE -> {
                 // Handle both URL and local image files
-                if (background.sourceType == com.rofiq.launcherly.features.background_settings.model.BackgroundSourceType.LOCAL && 
-                    LocalFileUtils.isLocalFile(background.resourcePath) && 
-                    !LocalFileUtils.isAndroidResource(background.resourcePath)) {
-                    // For local files (not Android resources), load from file path
-                    AsyncImage(
-                        model = ImageRequest.Builder(context)
-                            .data("file://${background.resourcePath}".toUri())
-                            .crossfade(true)
-                            .memoryCachePolicy(CachePolicy.ENABLED)
-                            .diskCachePolicy(CachePolicy.ENABLED)
-                            .scale(Scale.FIT)
-                            .build(),
-                        contentDescription = "Background Image",
-                        modifier = Modifier.fillMaxSize(),
-                        contentScale = ContentScale.Crop,
-                        placeholder = painterResource(id = R.drawable.background_auth),
-                        error = painterResource(id = R.drawable.background_auth)
-                    )
-                } else {
-                    // For URLs and Android resources, use the existing approach
-                    AsyncImage(
-                        model = ImageRequest.Builder(context)
-                            .data(background.directUrl)
-                            .crossfade(true)
-                            .memoryCachePolicy(CachePolicy.ENABLED)
-                            .diskCachePolicy(CachePolicy.ENABLED)
-                            .scale(Scale.FIT)
-                            .build(),
-                        contentDescription = "Background Image",
-                        modifier = Modifier.fillMaxSize(),
-                        contentScale = ContentScale.Crop,
-                        placeholder = painterResource(id = R.drawable.background_auth),
-                        error = painterResource(id = R.drawable.background_auth)
-                    )
-                }
+                val imageModel: Any =
+                    if (background.sourceType == com.rofiq.launcherly.features.background_settings.model.BackgroundSourceType.LOCAL &&
+                        LocalFileUtils.isLocalFile(background.resourcePath) &&
+                        !LocalFileUtils.isAndroidResource(background.resourcePath)
+                    ) {
+                        // For local files (not Android resources), load from file path
+                        "file://${background.resourcePath}".toUri()
+                    } else {
+                        // For URLs and Android resources
+                        background.directUrl
+                    }
+                GlideImage(
+                    model = imageModel,
+                    contentDescription = "Background Image",
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = ContentScale.Crop,
+                    loading = placeholder(R.drawable.background_auth),
+                    failure = placeholder(R.drawable.background_auth)
+                )
             }
         }
     } ?: run {
