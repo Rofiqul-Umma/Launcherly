@@ -1,5 +1,7 @@
 package com.rofiq.launcherly.features.background_settings.view
 
+import android.graphics.Bitmap
+import android.graphics.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -35,16 +37,21 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.KeyEventType
 import androidx.compose.ui.input.key.key
@@ -58,7 +65,13 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import coil.compose.SubcomposeAsyncImage
+import coil.imageLoader
 import coil.request.CachePolicy
+import coil.request.ImageRequest
+import coil.request.SuccessResult
+import androidx.palette.graphics.Palette
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import com.rofiq.launcherly.common.color.TVColors
 import com.rofiq.launcherly.common.text_style.TVTypography
 import com.rofiq.launcherly.common.widgets.LoadingIndicator
@@ -225,34 +238,109 @@ fun BackgroundCard(
         ),
         label = "borderWidth"
     )
+    // Glow halo alpha — spring-animated, fades in/out smoothly with focus
+    val glowAlpha by animateFloatAsState(
+        targetValue = if (isFocused) 1f else 0f,
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioMediumBouncy,
+            stiffness = Spring.StiffnessMediumLow
+        ),
+        label = "cardGlow"
+    )
 
-    Card(
+    // Dominant color from the card's image. Two sources handled:
+    //  - generated video thumbnail (already an in-memory Bitmap)
+    //  - IMAGE type URL (loaded via Coil, off main thread)
+    // Falls back to OnSurface while loading or on failure.
+    var dominantColor by remember(background.resourcePath) {
+        mutableStateOf<Color?>(null)
+    }
+    LaunchedEffect(generateThumbState.value) {
+        val thumb = generateThumbState.value ?: return@LaunchedEffect
+        val color = withContext(Dispatchers.Default) {
+            runCatching {
+                Color(Palette.from(thumb).generate().getDominantColor(TVColors.OnSurface.toArgb()))
+            }.getOrDefault(TVColors.OnSurface)
+        }
+        dominantColor = color
+    }
+    LaunchedEffect(background.type, background.directUrl) {
+        if (background.type != BackgroundType.IMAGE) return@LaunchedEffect
+        val url = background.directUrl
+        val color = withContext(Dispatchers.Default) {
+            runCatching {
+                val request = ImageRequest.Builder(context)
+                    .data(url)
+                    .size(96)
+                    .allowHardware(false) // Palette needs a software bitmap
+                    .build()
+                val drawable = (context.imageLoader.execute(request) as? SuccessResult)?.drawable
+                    ?: return@runCatching TVColors.OnSurface
+                val bmp = Bitmap.createBitmap(96, 96, Bitmap.Config.ARGB_8888)
+                val canvas = Canvas(bmp)
+                drawable.setBounds(0, 0, 96, 96)
+                drawable.draw(canvas)
+                Color(Palette.from(bmp).generate().getDominantColor(TVColors.OnSurface.toArgb()))
+            }.getOrDefault(TVColors.OnSurface)
+        }
+        dominantColor = color
+    }
+    val glowColor = dominantColor ?: TVColors.OnSurface
+
+    // Outer wrapper owns the focus scale + glow halo. The card is inset with a
+    // little padding so the glow renders as a visible ring AROUND the card,
+    // inside the cell bounds (so it's neither covered by the opaque card image
+    // nor clipped away by the lazy grid item).
+    Box(
         modifier = Modifier
             .aspectRatio(16f / 9f)
             .scale(focusScale)
-            .focusRequester(focusRequester)
-            .onFocusChanged { onFocusChanged(it.isFocused) }
-            .focusable()
-            .border(
-                width = borderWidth,
-                color = if (isFocused) TVColors.OnSurface else androidx.compose.ui.graphics.Color.Transparent,
-                shape = RoundedCornerShape(12.dp)
-            )
-            .onKeyEvent { keyEvent ->
-                if ((keyEvent.key == Key.DirectionCenter || keyEvent.key == Key.Enter) && keyEvent.type == KeyEventType.KeyUp) {
-                    onSelected()
-                    true
-                } else false
-            },
-        colors = CardDefaults.cardColors(
-            containerColor = when {
-                isSelected -> TVColors.OnSurfaceSecondary.copy(alpha = 0.2f)
-                else -> TVColors.Surface.copy(alpha = 0.6f)
+            .drawBehind {
+                if (glowAlpha > 0.01f) {
+                    val glowRadius = size.maxDimension * 0.75f
+                    drawCircle(
+                        center = center,
+                        radius = glowRadius,
+                        brush = Brush.radialGradient(
+                            colors = listOf(
+                                glowColor.copy(alpha = 0.60f * glowAlpha),
+                                glowColor.copy(alpha = 0.25f * glowAlpha),
+                                Color.Transparent
+                            ),
+                            center = center,
+                            radius = glowRadius
+                        )
+                    )
+                }
             }
-        ),
-        shape = RoundedCornerShape(12.dp)
     ) {
-        Box(modifier = Modifier.fillMaxSize()) {
+        Card(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(10.dp)
+                .focusRequester(focusRequester)
+                .onFocusChanged { onFocusChanged(it.isFocused) }
+                .focusable()
+                .border(
+                    width = borderWidth,
+                    color = if (isFocused) TVColors.OnSurface else Color.Transparent,
+                    shape = RoundedCornerShape(12.dp)
+                )
+                .onKeyEvent { keyEvent ->
+                    if ((keyEvent.key == Key.DirectionCenter || keyEvent.key == Key.Enter) && keyEvent.type == KeyEventType.KeyUp) {
+                        onSelected()
+                        true
+                    } else false
+                },
+            colors = CardDefaults.cardColors(
+                containerColor = when {
+                    isSelected -> TVColors.OnSurfaceSecondary.copy(alpha = 0.2f)
+                    else -> TVColors.Surface.copy(alpha = 0.6f)
+                }
+            ),
+            shape = RoundedCornerShape(12.dp)
+        ) {
+            Box(modifier = Modifier.fillMaxSize()) {
             // Background preview
             when (background.type) {
                 BackgroundType.IMAGE -> {
@@ -381,6 +469,7 @@ fun BackgroundCard(
                 )
             }
         }
+        }
     }
 }
 
@@ -407,49 +496,83 @@ fun AddLocalFileCard(
         ),
         label = "borderWidth"
     )
+    // Same glow treatment as BackgroundCard, but with a fixed color since
+    // this card has no image to sample a dominant color from.
+    val glowAlpha by animateFloatAsState(
+        targetValue = if (isFocused) 1f else 0f,
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioMediumBouncy,
+            stiffness = Spring.StiffnessMediumLow
+        ),
+        label = "addCardGlow"
+    )
 
-    Card(
+    Box(
         modifier = Modifier
             .aspectRatio(16f / 9f)
             .scale(focusScale)
-            .focusRequester(focusRequester)
-            .onFocusChanged { onFocusChanged(it.isFocused) }
-            .focusable()
-            .border(
-                width = borderWidth,
-                color = if (isFocused) TVColors.OnSurface else androidx.compose.ui.graphics.Color.Transparent,
-                shape = RoundedCornerShape(12.dp)
-            )
-            .onKeyEvent { keyEvent ->
-                if ((keyEvent.key == Key.DirectionCenter || keyEvent.key == Key.Enter) && keyEvent.type == KeyEventType.KeyUp) {
-                    onSelected()
-                    true
-                } else false
-            },
-        colors = CardDefaults.cardColors(
-            containerColor = TVColors.Surface.copy(alpha = 0.6f)
-        ),
-        shape = RoundedCornerShape(12.dp)
+            .drawBehind {
+                if (glowAlpha > 0.01f) {
+                    val glowRadius = size.maxDimension * 0.75f
+                    drawCircle(
+                        center = center,
+                        radius = glowRadius,
+                        brush = Brush.radialGradient(
+                            colors = listOf(
+                                TVColors.OnSurface.copy(alpha = 0.60f * glowAlpha),
+                                TVColors.OnSurface.copy(alpha = 0.25f * glowAlpha),
+                                Color.Transparent
+                            ),
+                            center = center,
+                            radius = glowRadius
+                        )
+                    )
+                }
+            }
     ) {
-        Box(
-            modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.Center
+        Card(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(10.dp)
+                .focusRequester(focusRequester)
+                .onFocusChanged { onFocusChanged(it.isFocused) }
+                .focusable()
+                .border(
+                    width = borderWidth,
+                    color = if (isFocused) TVColors.OnSurface else Color.Transparent,
+                    shape = RoundedCornerShape(12.dp)
+                )
+                .onKeyEvent { keyEvent ->
+                    if ((keyEvent.key == Key.DirectionCenter || keyEvent.key == Key.Enter) && keyEvent.type == KeyEventType.KeyUp) {
+                        onSelected()
+                        true
+                    } else false
+                },
+            colors = CardDefaults.cardColors(
+                containerColor = TVColors.Surface.copy(alpha = 0.6f)
+            ),
+            shape = RoundedCornerShape(12.dp)
         ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.padding(16.dp)
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
             ) {
-                Icon(
-                    imageVector = Icons.Default.AddToQueue,
-                    contentDescription = "Add Local File",
-                    tint = TVColors.OnSurface,
-                    modifier = Modifier.size(32.dp)
-                )
-                Text(
-                    text = "Local Background",
-                    style = TVTypography.BodyRegular.copy(color = TVColors.OnSurface),
-                    modifier = Modifier.padding(start = 8.dp)
-                )
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.padding(16.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.AddToQueue,
+                        contentDescription = "Add Local File",
+                        tint = TVColors.OnSurface,
+                        modifier = Modifier.size(32.dp)
+                    )
+                    Text(
+                        text = "Local Background",
+                        style = TVTypography.BodyRegular.copy(color = TVColors.OnSurface),
+                        modifier = Modifier.padding(start = 8.dp)
+                    )
+                }
             }
         }
     }
