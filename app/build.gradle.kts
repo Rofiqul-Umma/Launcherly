@@ -76,6 +76,9 @@ dependencies {
     implementation(libs.coil.compose)
     implementation(libs.coil.video)
 
+    // Palette (dominant color extraction for glow)
+    implementation(libs.androidx.palette.ktx)
+
     // Retrofit converter
     implementation(libs.converter.gson)
 

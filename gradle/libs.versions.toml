@@ -4,6 +4,7 @@ coilCompose = "2.7.0"
 gson = "2.13.2"
 kotlin = "2.2.10"
 coreKtx = "1.17.0"
+palette = "1.0.0"
 appcompat = "1.7.1"
 composeBom = "2025.08.01"
 material3AdaptiveNavigationSuite = "1.5.0-alpha04"
@@ -25,6 +26,7 @@ media3Ui = "1.8.0"
 androidx-compose-material3-adaptive-navigation-suite = { module = "androidx.compose.material3:material3-adaptive-navigation-suite", version.ref = "material3AdaptiveNavigationSuite" }
 androidx-compose-material3-window-size-class1 = { module = "androidx.compose.material3:material3-window-size-class", version.ref = "material3WindowSizeClass" }
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
+androidx-palette-ktx = { module = "androidx.palette:palette-ktx", version.ref = "palette" }
 androidx-appcompat = { group = "androidx.appcompat", name = "appcompat", version.ref = "appcompat" }
 androidx-compose-bom = { group = "androidx.compose", name = "compose-bom", version.ref = "composeBom" }
 androidx-ui = { group = "androidx.compose.ui", name = "ui" }
