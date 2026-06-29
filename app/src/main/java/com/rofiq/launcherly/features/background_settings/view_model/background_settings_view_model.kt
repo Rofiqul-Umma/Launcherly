@@ -1,9 +1,7 @@
 package com.rofiq.launcherly.features.background_settings.view_model
 
-import android.content.ContentUris
 import android.content.Context
 import android.net.Uri
-import android.provider.MediaStore
 import androidx.annotation.OptIn
 import androidx.core.net.toUri
 import androidx.lifecycle.ViewModel
@@ -17,7 +15,6 @@ import androidx.media3.exoplayer.DefaultLoadControl
 import androidx.media3.exoplayer.ExoPlayer
 import com.rofiq.launcherly.features.background_settings.model.BackgroundSetting
 import com.rofiq.launcherly.features.background_settings.model.BackgroundType
-import com.rofiq.launcherly.features.background_settings.model.MediaItemModel
 import com.rofiq.launcherly.features.background_settings.service.BackgroundSettingsService
 import com.rofiq.launcherly.utils.GoogleDriveUtils
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -26,7 +23,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
-import kotlin.io.path.Path
 
 
 @HiltViewModel
@@ -139,7 +135,7 @@ class BackgroundSettingsViewModel @Inject constructor(
                     loadBackgroundSettings()
                 }
                 callback(success)
-            } catch (e: Exception) {
+            } catch (_: Exception) {
                 callback(false)
             }
         }

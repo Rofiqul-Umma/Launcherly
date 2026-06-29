@@ -1,6 +1,5 @@
 package com.rofiq.launcherly.features.home.view.component
 
-import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.util.Log
 import androidx.compose.animation.AnimatedVisibility
@@ -52,7 +51,11 @@ import androidx.compose.ui.input.key.type
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.core.graphics.createBitmap
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.palette.graphics.Palette
+import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
+import com.bumptech.glide.integration.compose.GlideImage
 import com.rofiq.launcherly.common.color.TVColors
 import com.rofiq.launcherly.common.text_style.TVTypography
 import com.rofiq.launcherly.common.widgets.LoadingIndicator
@@ -67,10 +70,6 @@ import com.rofiq.launcherly.features.launch_app.view_model.LaunchAppSuccess
 import com.rofiq.launcherly.features.launch_app.view_model.LaunchAppViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import androidx.hilt.navigation.compose.hiltViewModel
-import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
-import com.bumptech.glide.integration.compose.GlideImage
-import androidx.core.graphics.createBitmap
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class, ExperimentalGlideComposeApi::class)
 @Composable

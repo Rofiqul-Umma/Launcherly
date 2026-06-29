@@ -56,7 +56,7 @@ fun DynamicBackground(
     LaunchedEffect(currentBackground, context) {
         currentBackground?.let { background ->
             if (background.type == BackgroundType.VIDEO) {
-                val videoUrl = if (background.sourceType == com.rofiq.launcherly.features.background_settings.model.BackgroundSourceType.URL) {
+                val videoUrl = if (background.sourceType == BackgroundSourceType.URL) {
                     GoogleDriveUtils.convertSharingUrlToDownloadUrl(background.resourcePath)
                 } else {
                     background.resourcePath
@@ -75,7 +75,7 @@ fun DynamicBackground(
                     currentBackground?.let { background ->
                         if (background.type == BackgroundType.VIDEO) {
                             // Ensure player is initialized and playing when resuming
-                            val videoUrl = if (background.sourceType == com.rofiq.launcherly.features.background_settings.model.BackgroundSourceType.URL) {
+                            val videoUrl = if (background.sourceType == BackgroundSourceType.URL) {
                                 GoogleDriveUtils.convertSharingUrlToDownloadUrl(background.resourcePath)
                             } else {
                                 background.resourcePath
@@ -151,7 +151,7 @@ fun DynamicBackground(
             BackgroundType.IMAGE -> {
                 // Handle both URL and local image files
                 val imageModel: Any =
-                    if (background.sourceType == com.rofiq.launcherly.features.background_settings.model.BackgroundSourceType.LOCAL &&
+                    if (background.sourceType == BackgroundSourceType.LOCAL &&
                         LocalFileUtils.isLocalFile(background.resourcePath) &&
                         !LocalFileUtils.isAndroidResource(background.resourcePath)
                     ) {
