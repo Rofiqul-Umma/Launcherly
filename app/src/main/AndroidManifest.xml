@@ -17,6 +17,17 @@
     <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES"
         tools:ignore="QueryAllPackagesPermission" />
 
+    <queries>
+        <package android:name="com.vidio.android.tv" />
+        <package android:name="com.google.android.youtube.tv" />
+        <package android:name="com.netflix.ninja" />
+        <package android:name="com.amazon.amazonvideo.livingroom" />
+        <package android:name="com.vectorunit.purple.googleplay" />
+        <package android:name="id.visionplus.android.atv"/>
+        <package android:name="com.spotify.tv.android"/>
+        <package android:name="com.wbd.stream"/>
+    </queries>
+
 
     <application
         android:name=".LauncherlyApp"
