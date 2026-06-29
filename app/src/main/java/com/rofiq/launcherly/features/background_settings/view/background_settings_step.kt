@@ -6,6 +6,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.focusable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
@@ -25,6 +26,10 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -35,6 +40,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
@@ -146,6 +152,9 @@ fun BackgroundGrid(
         columns = GridCells.Fixed(3),
         horizontalArrangement = Arrangement.spacedBy(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp),
+        // Inside inset so focused cards have room to scale without being
+        // clipped at the grid's bounds (top/bottom edges & sides).
+        contentPadding = PaddingValues(vertical = 8.dp),
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 32.dp)
@@ -199,14 +208,33 @@ fun BackgroundCard(
 
     val context = LocalContext.current
 
+    // MD3-style fluid focus animation: scale + border width spring
+    val focusScale by animateFloatAsState(
+        targetValue = if (isFocused) 1.05f else 1f,
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioLowBouncy,
+            stiffness = Spring.StiffnessLow
+        ),
+        label = "focusScale"
+    )
+    val borderWidth by animateDpAsState(
+        targetValue = if (isFocused) 3.dp else 0.dp,
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioNoBouncy,
+            stiffness = Spring.StiffnessMedium
+        ),
+        label = "borderWidth"
+    )
+
     Card(
         modifier = Modifier
             .aspectRatio(16f / 9f)
+            .scale(focusScale)
             .focusRequester(focusRequester)
             .onFocusChanged { onFocusChanged(it.isFocused) }
             .focusable()
             .border(
-                width = if (isFocused) 3.dp else 0.dp,
+                width = borderWidth,
                 color = if (isFocused) TVColors.OnSurface else androidx.compose.ui.graphics.Color.Transparent,
                 shape = RoundedCornerShape(12.dp)
             )
@@ -363,14 +391,32 @@ fun AddLocalFileCard(
     onFocusChanged: (Boolean) -> Unit,
     onSelected: () -> Unit,
 ) {
+    val focusScale by animateFloatAsState(
+        targetValue = if (isFocused) 1.05f else 1f,
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioLowBouncy,
+            stiffness = Spring.StiffnessLow
+        ),
+        label = "focusScale"
+    )
+    val borderWidth by animateDpAsState(
+        targetValue = if (isFocused) 3.dp else 0.dp,
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioNoBouncy,
+            stiffness = Spring.StiffnessMedium
+        ),
+        label = "borderWidth"
+    )
+
     Card(
         modifier = Modifier
             .aspectRatio(16f / 9f)
+            .scale(focusScale)
             .focusRequester(focusRequester)
             .onFocusChanged { onFocusChanged(it.isFocused) }
             .focusable()
             .border(
-                width = if (isFocused) 3.dp else 0.dp,
+                width = borderWidth,
                 color = if (isFocused) TVColors.OnSurface else androidx.compose.ui.graphics.Color.Transparent,
                 shape = RoundedCornerShape(12.dp)
             )
