@@ -155,88 +155,136 @@ fun HomePage(
 
                     Row(
                         horizontalArrangement = Arrangement.End,
-                        verticalAlignment = Alignment.CenterVertically
+                        verticalAlignment = Alignment.Top
                     ) {
-                        Icon(
-                            imageVector = if (showAllApps) Icons.Default.Star else Icons.Default.Apps,
-                            contentDescription = if (showAllApps) "Show favorite apps" else "Show all apps",
-                            modifier = Modifier
-                                .size(30.dp)
-                                .focusRequester(showAllAppFocusRequester)
-                                .onFocusChanged { showAllAppsFocus.value = it.isFocused }
-                                .focusable()
-                                .background(
-                                    color = if (showAllAppsFocus.value) TVColors.OnSurface else Color.Transparent,
-                                    shape = RoundedCornerShape(100.dp)
-                                )
-                                .padding(5.dp)
-                                .onKeyEvent { keyEvent ->
-                                    if (keyEvent.type == KeyEventType.KeyDown) {
-                                        when (keyEvent.key) {
-                                            Key.DirectionCenter, Key.Enter -> {
-                                                showAllApps = !showAllApps
-                                                if (showAllApps) {
-                                                    homeVM.fetchAllApps()
-                                                } else {
-                                                    homeVM.fetchFavoriteApps()
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier
+                                    .size(30.dp)
+                                    .focusRequester(showAllAppFocusRequester)
+                                    .onFocusChanged { showAllAppsFocus.value = it.isFocused }
+                                    .focusable()
+                                    .background(
+                                        color = if (showAllAppsFocus.value) TVColors.OnSurface else Color.Transparent,
+                                        shape = RoundedCornerShape(100.dp)
+                                    )
+                                    .padding(5.dp)
+                                    .onKeyEvent { keyEvent ->
+                                        if (keyEvent.type == KeyEventType.KeyDown) {
+                                            when (keyEvent.key) {
+                                                Key.DirectionCenter, Key.Enter -> {
+                                                    showAllApps = !showAllApps
+                                                    if (showAllApps) {
+                                                        homeVM.fetchAllApps()
+                                                    } else {
+                                                        homeVM.fetchFavoriteApps()
+                                                    }
+                                                    true
                                                 }
-                                                true
+
+                                                else -> false
                                             }
-
-                                            else -> false
-                                        }
-                                    } else false
-                                },
-                            tint = if (showAllAppsFocus.value)  TVColors.Background else  TVColors.OnSurface
-                        )
+                                        } else false
+                                    }
+                            ) {
+                                Icon(
+                                    imageVector = if (showAllApps) Icons.Default.Star else Icons.Default.Apps,
+                                    contentDescription = if (showAllApps) "Show favorite apps" else "Show all apps",
+                                    modifier = Modifier.size(30.dp),
+                                    tint = if (showAllAppsFocus.value) TVColors.Background else TVColors.OnSurface
+                                )
+                            }
+                            if (showAllAppsFocus.value) {
+                                Text(
+                                    text = if (showAllApps) "Favorite apps" else "All apps",
+                                    color = TVColors.OnSurface,
+                                    modifier = Modifier.padding(top = 4.dp)
+                                )
+                            }
+                        }
 
                         Spacer(modifier = Modifier.size(16.dp))
 
-                        Icon(
-                            imageVector = Icons.Default.Settings,
-                            contentDescription = "Settings",
-                            modifier = Modifier
-                                .size(30.dp)
-                                .focusRequester(settingsFocusRequester)
-                                .onFocusChanged { settingsFocused.value = it.isFocused }
-                                .focusable()
-                                .background(
-                                    color = if (settingsFocused.value) TVColors.OnSurface else Color.Transparent,
-                                    shape = RoundedCornerShape(100.dp)
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier
+                                    .size(30.dp)
+                                    .focusRequester(settingsFocusRequester)
+                                    .onFocusChanged { settingsFocused.value = it.isFocused }
+                                    .focusable()
+                                    .background(
+                                        color = if (settingsFocused.value) TVColors.OnSurface else Color.Transparent,
+                                        shape = RoundedCornerShape(100.dp)
+                                    )
+                                    .padding(5.dp)
+                                    .onKeyEvent { keyEvent ->
+                                        if ((keyEvent.key == Key.DirectionCenter || keyEvent.key == Key.Enter) && keyEvent.type == KeyEventType.KeyUp) {
+                                            navController.navigate("guided_settings")
+                                            true
+                                        } else false
+                                    }
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Settings,
+                                    contentDescription = "Settings",
+                                    modifier = Modifier.size(30.dp),
+                                    tint = if (settingsFocused.value) TVColors.Background else TVColors.OnSurface
                                 )
-                                .padding(5.dp)
-                                .onKeyEvent { keyEvent ->
-                                    if ((keyEvent.key == Key.DirectionCenter || keyEvent.key == Key.Enter) && keyEvent.type == KeyEventType.KeyUp) {
-                                        navController.navigate("guided_settings")
-                                        true
-                                    } else false
-                                },
-                            tint = if (settingsFocused.value) TVColors.Background else TVColors.OnSurface
-                        )
+                            }
+                            if (settingsFocused.value) {
+                                Text(
+                                    text = "Settings",
+                                    color = TVColors.OnSurface,
+                                    modifier = Modifier.padding(top = 4.dp)
+                                )
+                            }
+                        }
 
                         Spacer(modifier = Modifier.size(16.dp))
 
-                        Icon(
-                            imageVector = if (checkInternetState.value is CheckInternetIsConnected) Icons.Default.Wifi else Icons.Default.WifiOff,
-                            contentDescription = "Wifi",
-                            modifier = Modifier
-                                .size(30.dp)
-                                .focusRequester(wifiFocusRequester)
-                                .onFocusChanged { wifiFocused.value = it.isFocused }
-                                .focusable()
-                                .background(
-                                    color = if (wifiFocused.value) TVColors.OnSurface else Color.Transparent,
-                                    shape = RoundedCornerShape(100.dp)
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier
+                                    .size(30.dp)
+                                    .focusRequester(wifiFocusRequester)
+                                    .onFocusChanged { wifiFocused.value = it.isFocused }
+                                    .focusable()
+                                    .background(
+                                        color = if (wifiFocused.value) TVColors.OnSurface else Color.Transparent,
+                                        shape = RoundedCornerShape(100.dp)
+                                    )
+                                    .padding(5.dp)
+                                    .onKeyEvent { keyEvent ->
+                                        if ((keyEvent.key == Key.DirectionCenter || keyEvent.key == Key.Enter) && keyEvent.type == KeyEventType.KeyUp) {
+                                            deviceManagerVM.openNetworkSettings()
+                                            true
+                                        } else false
+                                    }
+                            ) {
+                                Icon(
+                                    imageVector = if (checkInternetState.value is CheckInternetIsConnected) Icons.Default.Wifi else Icons.Default.WifiOff,
+                                    contentDescription = "Wifi",
+                                    modifier = Modifier.size(30.dp),
+                                    tint = if (wifiFocused.value) TVColors.Background else TVColors.OnSurface
                                 )
-                                .onKeyEvent { keyEvent ->
-                                    if ((keyEvent.key == Key.DirectionCenter || keyEvent.key == Key.Enter) && keyEvent.type == KeyEventType.KeyUp) {
-                                        deviceManagerVM.openNetworkSettings()
-                                        true
-                                    } else false
-                                }
-                                .padding(5.dp),
-                            tint = if (wifiFocused.value) TVColors.Background else TVColors.OnSurface
-                        )
+                            }
+                            if (wifiFocused.value) {
+                                Text(
+                                    text = "Network",
+                                    color = TVColors.OnSurface,
+                                    modifier = Modifier.padding(top = 4.dp)
+                                )
+                            }
+                        }
                     }
                 }
 
