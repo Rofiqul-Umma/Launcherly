@@ -1,5 +1,7 @@
 package com.rofiq.launcherly.features.home.view.component
 
+import android.graphics.Bitmap
+import android.graphics.Canvas
 import android.util.Log
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateDpAsState
@@ -41,7 +43,6 @@ import androidx.compose.ui.input.key.onKeyEvent
 import androidx.compose.ui.input.key.type
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.core.graphics.drawable.toBitmap
 import androidx.palette.graphics.Palette
 import com.rofiq.launcherly.common.color.TVColors
 import com.rofiq.launcherly.common.text_style.TVTypography
@@ -125,15 +126,28 @@ fun ListApps(
                             )
                             // Extract dominant color from the icon drawable once per app.
                             // Falls back to OnSurface (white) while loading or if extraction fails.
+                            // IMPORTANT: use a fresh copy of the drawable (constantState.newDrawable())
+                            // — never mutate the shared instance, since AsyncImage reads it on the
+                            // main thread. Drawables aren't thread-safe and racing on bounds will
+                            // crash AdaptiveIconDrawable's mask computation.
                             var dominantColor by remember(app.packageName) {
                                 mutableStateOf<Color?>(null)
                             }
                             LaunchedEffect(app.icon) {
                                 val drawable = app.icon ?: return@LaunchedEffect
+                                val constantState = drawable.constantState ?: return@LaunchedEffect
                                 val color = withContext(Dispatchers.Default) {
-                                    val bitmap = drawable.toBitmap(96, 96)
-                                    val palette = Palette.from(bitmap).generate()
-                                    Color(palette.getDominantColor(TVColors.OnSurface.toArgb()))
+                                    runCatching {
+                                        val source = constantState.newDrawable()
+                                        val bitmap = Bitmap.createBitmap(
+                                            96, 96, Bitmap.Config.ARGB_8888
+                                        )
+                                        val canvas = Canvas(bitmap)
+                                        source.setBounds(0, 0, 96, 96)
+                                        source.draw(canvas)
+                                        val palette = Palette.from(bitmap).generate()
+                                        Color(palette.getDominantColor(TVColors.OnSurface.toArgb()))
+                                    }.getOrDefault(TVColors.OnSurface)
                                 }
                                 dominantColor = color
                             }
