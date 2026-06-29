@@ -15,7 +15,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Text
@@ -60,6 +60,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
+import androidx.core.graphics.createBitmap
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
@@ -106,8 +107,9 @@ fun ListApps(
                         horizontalArrangement = Arrangement.Center,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        items(apps) { app ->
-                            val isFirst = apps.indexOf(app) == 0
+                        itemsIndexed(apps) { index, app ->
+                            val isFirst = index == 0
+                            val isLast = index == apps.lastIndex
                             val appListFocusRequester =
                                 if (isFirst) firstAppFocusRequester else remember { FocusRequester() }
                             val appListFocused = remember { mutableStateOf(false) }
@@ -139,9 +141,7 @@ fun ListApps(
                                 val color = withContext(Dispatchers.Default) {
                                     runCatching {
                                         val source = constantState.newDrawable()
-                                        val bitmap = Bitmap.createBitmap(
-                                            96, 96, Bitmap.Config.ARGB_8888
-                                        )
+                                        val bitmap = createBitmap(96, 96)
                                         val canvas = Canvas(bitmap)
                                         source.setBounds(0, 0, 96, 96)
                                         source.draw(canvas)
@@ -181,10 +181,18 @@ fun ListApps(
                                     .onFocusChanged { appListFocused.value = it.isFocused }
                                     .focusable()
                                     .onKeyEvent { keyEvent ->
-                                        if ((keyEvent.key == Key.DirectionCenter || keyEvent.key == Key.Enter) && keyEvent.type == KeyEventType.KeyUp) {
-                                            launchAppVM.launchApp(app.packageName)
-                                            true
-                                        } else false
+                                        when {
+                                            (keyEvent.key == Key.DirectionCenter || keyEvent.key == Key.Enter) && keyEvent.type == KeyEventType.KeyUp -> {
+                                                launchAppVM.launchApp(app.packageName)
+                                                true
+                                            }
+
+                                            keyEvent.type == KeyEventType.KeyDown &&
+                                                    ((keyEvent.key == Key.DirectionLeft && isFirst) ||
+                                                            (keyEvent.key == Key.DirectionRight && isLast)) -> true
+
+                                            else -> false
+                                        }
                                     }
                             ) {
                                 AsyncImage(
