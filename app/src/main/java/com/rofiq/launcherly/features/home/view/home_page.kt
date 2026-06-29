@@ -166,7 +166,7 @@ fun HomePage(
                                 .onFocusChanged { showAllAppsFocus.value = it.isFocused }
                                 .focusable()
                                 .background(
-                                    color = if (showAllAppsFocus.value) TVColors.OnSurfaceSecondary.copy(alpha = 0.5f) else Color.Transparent,
+                                    color = if (showAllAppsFocus.value) TVColors.OnSurface else Color.Transparent,
                                     shape = RoundedCornerShape(100.dp)
                                 )
                                 .padding(5.dp)
@@ -187,7 +187,7 @@ fun HomePage(
                                         }
                                     } else false
                                 },
-                            tint = TVColors.OnSurface
+                            tint = if (showAllAppsFocus.value)  TVColors.Background else  TVColors.OnSurface
                         )
 
                         Spacer(modifier = Modifier.size(16.dp))
@@ -201,7 +201,7 @@ fun HomePage(
                                 .onFocusChanged { settingsFocused.value = it.isFocused }
                                 .focusable()
                                 .background(
-                                    color = if (settingsFocused.value) TVColors.OnSurfaceSecondary.copy(alpha = 0.5f) else Color.Transparent,
+                                    color = if (settingsFocused.value) TVColors.OnSurface else Color.Transparent,
                                     shape = RoundedCornerShape(100.dp)
                                 )
                                 .padding(5.dp)
@@ -211,7 +211,7 @@ fun HomePage(
                                         true
                                     } else false
                                 },
-                            tint = TVColors.OnSurface
+                            tint = if (settingsFocused.value) TVColors.Background else TVColors.OnSurface
                         )
 
                         Spacer(modifier = Modifier.size(16.dp))
@@ -225,7 +225,7 @@ fun HomePage(
                                 .onFocusChanged { wifiFocused.value = it.isFocused }
                                 .focusable()
                                 .background(
-                                    color = if (wifiFocused.value) TVColors.OnSurfaceSecondary.copy(alpha = 0.5f) else Color.Transparent,
+                                    color = if (wifiFocused.value) TVColors.OnSurface else Color.Transparent,
                                     shape = RoundedCornerShape(100.dp)
                                 )
                                 .onKeyEvent { keyEvent ->
@@ -235,7 +235,7 @@ fun HomePage(
                                     } else false
                                 }
                                 .padding(5.dp),
-                            tint = TVColors.OnSurface
+                            tint = if (wifiFocused.value) TVColors.Background else TVColors.OnSurface
                         )
                     }
                 }
