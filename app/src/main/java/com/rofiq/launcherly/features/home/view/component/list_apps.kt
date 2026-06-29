@@ -185,16 +185,6 @@ fun ListApps(
                             Column(
                                 horizontalAlignment = Alignment.CenterHorizontally,
                                 modifier = Modifier
-                                    .drawBehind {
-                                        if (glowAlpha > 0.01f) {
-                                            drawCircle(
-                                                brush = glowBrush,
-                                                center = center,
-                                                radius = size.minDimension / 2f,
-                                                alpha = glowAlpha
-                                            )
-                                        }
-                                    }
                                     .padding(8.dp)
                                     .focusRequester(appListFocusRequester)
                                     .onFocusChanged { appListFocused.value = it.isFocused }
@@ -214,17 +204,36 @@ fun ListApps(
                                         }
                                     }
                             ) {
-                                AsyncImage(
-                                    model = app.icon,
-                                    contentDescription = app.name,
+                                // Glow is bound to the icon's Box, not the Column. The Column grows
+                                // downward when the title appears, which would otherwise leave the
+                                // glow centered below the icon. Tying it here keeps the halo locked
+                                // to the icon no matter where the item sits.
+                                Box(
+                                    contentAlignment = Alignment.Center,
                                     modifier = Modifier
-                                        .size(90.dp)
-                                        .padding(10.dp)
-                                        .graphicsLayer {
-                                            scaleX = iconScale
-                                            scaleY = iconScale
+                                        .drawBehind {
+                                            if (glowAlpha > 0.01f) {
+                                                drawCircle(
+                                                    brush = glowBrush,
+                                                    center = center,
+                                                    radius = size.minDimension / 2f,
+                                                    alpha = glowAlpha
+                                                )
+                                            }
                                         }
-                                )
+                                ) {
+                                    AsyncImage(
+                                        model = app.icon,
+                                        contentDescription = app.name,
+                                        modifier = Modifier
+                                            .size(90.dp)
+                                            .padding(10.dp)
+                                            .graphicsLayer {
+                                                scaleX = iconScale
+                                                scaleY = iconScale
+                                            }
+                                    )
+                                }
                                 AnimatedVisibility(
                                     visible = appListFocused.value,
                                     enter = fadeIn() + expandVertically(),
