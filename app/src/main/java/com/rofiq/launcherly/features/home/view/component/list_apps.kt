@@ -68,10 +68,11 @@ import com.rofiq.launcherly.features.launch_app.view_model.LaunchAppViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import androidx.hilt.navigation.compose.hiltViewModel
-import coil.compose.AsyncImage
+import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
+import com.bumptech.glide.integration.compose.GlideImage
 import androidx.core.graphics.createBitmap
 
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@OptIn(ExperimentalMaterial3ExpressiveApi::class, ExperimentalGlideComposeApi::class)
 @Composable
 fun ListApps(
     homeVM: HomeViewModel = hiltViewModel(),
@@ -149,8 +150,8 @@ fun ListApps(
                             // Extract dominant color from the icon drawable once per app.
                             // Falls back to OnSurface (white) while loading or if extraction fails.
                             // IMPORTANT: use a fresh copy of the drawable (constantState.newDrawable())
-                            // — never mutate the shared instance, since AsyncImage reads it on the
-                            // main thread. Drawables aren't thread-safe and racing on bounds will
+                            // — never mutate the shared instance, since the image composable reads it
+                            // on the main thread. Drawables aren't thread-safe and racing on bounds will
                             // crash AdaptiveIconDrawable's mask computation.
                             var dominantColor by remember(app.packageName) {
                                 mutableStateOf<Color?>(null)
@@ -224,7 +225,7 @@ fun ListApps(
                                             }
                                         }
                                 ) {
-                                    AsyncImage(
+                                    GlideImage(
                                         model = app.icon,
                                         contentDescription = app.name,
                                         modifier = Modifier

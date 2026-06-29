@@ -1,6 +1,5 @@
 [versions]
 agp = "9.2.1"
-coilCompose = "2.7.0"
 glide = "4.16.0"
 glideCompose = "1.0.0-beta09"
 gson = "2.13.2"
@@ -45,8 +44,6 @@ androidx-activity-compose = { group = "androidx.activity", name = "activity-comp
 androidx-material3 = { group = "androidx.compose.material3", name = "material3", version.ref = "material3" }
 androidx-material-icons-extended = { group = "androidx.compose.material", name = "material-icons-extended" }
 androidx-navigation-compose = { group = "androidx.navigation", name = "navigation-compose", version.ref = "navigationCompose" }
-coil-compose = { module = "io.coil-kt:coil-compose", version.ref = "coilCompose" }
-coil-video = { module = "io.coil-kt:coil-video", version.ref = "coilCompose" }
 glide = { module = "com.github.bumptech.glide:glide", version.ref = "glide" }
 glide-compose = { module = "com.github.bumptech.glide:compose", version.ref = "glideCompose" }
 glide-compiler = { module = "com.github.bumptech.glide:compiler", version.ref = "glide" }

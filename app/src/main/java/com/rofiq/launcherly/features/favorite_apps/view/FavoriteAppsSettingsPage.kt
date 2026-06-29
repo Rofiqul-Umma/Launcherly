@@ -45,7 +45,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
-import coil.compose.AsyncImage
+import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
+import com.bumptech.glide.integration.compose.GlideImage
 import com.rofiq.launcherly.common.color.TVColors
 import com.rofiq.launcherly.common.text_style.TVTypography
 import com.rofiq.launcherly.features.favorite_apps.view_model.AllAppsErrorState
@@ -158,6 +159,7 @@ fun FavoriteAppsList(
     }
 }
 
+@OptIn(ExperimentalGlideComposeApi::class)
 @Composable
 fun FavoriteAppItem(
     app: com.rofiq.launcherly.features.home.model.AppInfoModel,
@@ -215,7 +217,7 @@ fun FavoriteAppItem(
             Row(
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                AsyncImage(
+                GlideImage(
                     model = app.icon,
                     contentDescription = app.name,
                     modifier = Modifier.size(40.dp)

@@ -15,7 +15,6 @@ import androidx.media3.common.util.Log
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.DefaultLoadControl
 import androidx.media3.exoplayer.ExoPlayer
-import coil.ImageLoader
 import com.rofiq.launcherly.features.background_settings.model.BackgroundSetting
 import com.rofiq.launcherly.features.background_settings.model.BackgroundType
 import com.rofiq.launcherly.features.background_settings.model.MediaItemModel
@@ -33,7 +32,6 @@ import kotlin.io.path.Path
 @HiltViewModel
 class BackgroundSettingsViewModel @Inject constructor(
     private val backgroundSettingsService: BackgroundSettingsService,
-    val imageLoader: ImageLoader
 ) : ViewModel() {
 
     private val _backgroundSettingsState =

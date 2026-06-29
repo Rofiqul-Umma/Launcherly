@@ -56,7 +56,6 @@ dependencies {
     implementation(libs.androidx.tv.material)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
-    implementation(libs.androidx.material3)
     implementation(libs.androidx.navigation.compose)
     implementation(libs.androidx.media3.exoplayer)
     implementation(libs.androidx.media3.ui)
@@ -74,11 +73,7 @@ dependencies {
     kapt(libs.hilt.android.compiler)
     implementation(libs.androidx.hilt.navigation.compose)
 
-    // Async Image
-    implementation(libs.coil.compose)
-    implementation(libs.coil.video)
-
-    // Glide (background settings image loading — lighter bitmap pooling for low-end TV)
+    // Glide (image loading — lighter bitmap pooling for low-end TV)
     implementation(libs.glide)
     implementation(libs.glide.compose)
     kapt(libs.glide.compiler)
