@@ -35,4 +35,12 @@ class GenerateVideoThumbnailsViewModel @Inject constructor
             }
         }
     }
+
+    /**
+     * Drops the retained thumbnail bitmap so it can be garbage collected once the
+     * card scrolls off-screen, instead of being held for the life of the nav entry.
+     */
+    fun clearThumbnail() {
+        _generateVideoThumbState.value = null
+    }
 }

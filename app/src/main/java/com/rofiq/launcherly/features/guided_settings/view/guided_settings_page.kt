@@ -50,12 +50,14 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
+import kotlinx.coroutines.delay
 import com.rofiq.launcherly.common.color.TVColors
 import com.rofiq.launcherly.common.text_style.TVTypography
 import com.rofiq.launcherly.features.clock_settings.view_model.ClockSettingsViewModel
 import com.rofiq.launcherly.features.device_manager.view_model.DeviceManagerViewModel
 import java.text.SimpleDateFormat
 import java.util.Locale
+import kotlin.time.Duration.Companion.milliseconds
 
 data class SettingsItem(
     val title: String,
@@ -178,8 +180,15 @@ fun SettingsButtonList(
     val focusRequesters = remember { items.map { FocusRequester() } }
 
     LaunchedEffect(Unit) {
-        if (focusRequesters.isNotEmpty()) {
-            focusRequesters.firstOrNull()?.requestFocus()
+        // On slow devices the first lazy item may not be attached yet when this
+        // runs; requestFocus() throws IllegalStateException until it is, so retry
+        // a few times until the node exists instead of crashing.
+        repeat(10) {
+            val focused = runCatching {
+                focusRequesters.firstOrNull()?.requestFocus()
+            }.isSuccess
+            if (focused) return@LaunchedEffect
+            delay(50.milliseconds)
         }
     }
 

@@ -33,6 +33,7 @@ import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -72,6 +73,7 @@ import com.bumptech.glide.request.RequestListener
 import com.bumptech.glide.request.target.Target
 import androidx.palette.graphics.Palette
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 import com.rofiq.launcherly.common.color.TVColors
 import com.rofiq.launcherly.common.text_style.TVTypography
@@ -84,6 +86,13 @@ import com.rofiq.launcherly.features.background_settings.view_model.BackgroundSe
 import com.rofiq.launcherly.features.generate_video_thumbnails.view_model.GenerateVideoThumbnailsViewModel
 import com.rofiq.launcherly.features.guided_settings.view.GuidedStepLayout
 import com.rofiq.launcherly.utils.GoogleDriveUtils
+import kotlin.time.Duration.Companion.milliseconds
+
+// Grid previews are small 16:9 cards, so decode Drive images down to this size
+// instead of their full resolution. A full-res decode per visible card is what
+// OOMs low-RAM TV boxes; ~512x288 is plenty for a preview thumbnail.
+private const val PREVIEW_WIDTH_PX = 512
+private const val PREVIEW_HEIGHT_PX = 288
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
@@ -159,7 +168,16 @@ fun BackgroundGrid(
 
 
     LaunchedEffect(Unit) {
-        focusRequesters.firstOrNull()?.requestFocus()
+        // On slow devices the first lazy grid item may not be attached yet when
+        // this runs; requestFocus() throws IllegalStateException until it is, so
+        // retry a few times until the node exists instead of crashing.
+        repeat(10) {
+            val focused = runCatching {
+                focusRequesters.firstOrNull()?.requestFocus()
+            }.isSuccess
+            if (focused) return@LaunchedEffect
+            delay(50.milliseconds)
+        }
     }
 
     LazyVerticalGrid(
@@ -380,7 +398,9 @@ private fun ImageCardContent(
                 .clip(RoundedCornerShape(12.dp)),
             contentScale = ContentScale.Crop,
         ) { requestBuilder ->
-            requestBuilder.listener(dominantColorListener(onDominantColor))
+            requestBuilder
+                .override(PREVIEW_WIDTH_PX, PREVIEW_HEIGHT_PX)
+                .listener(dominantColorListener(onDominantColor))
         }
     }
 }
@@ -398,6 +418,11 @@ private fun VideoCardContent(
     )
     LaunchedEffect(background) {
         generateVideoThumbVM.generateThumbnailForVideo(background.resourcePath)
+    }
+    // Free the thumbnail bitmap when the card leaves composition so it isn't
+    // retained for the whole nav back-stack entry, which accumulates on low RAM.
+    DisposableEffect(Unit) {
+        onDispose { generateVideoThumbVM.clearThumbnail() }
     }
     val generateThumbState = generateVideoThumbVM.generateVideoThumbState.collectAsState()
 
@@ -444,7 +469,9 @@ private fun VideoCardContent(
                         .clip(RoundedCornerShape(12.dp)),
                     contentScale = ContentScale.Crop,
                 ) { requestBuilder ->
-                    requestBuilder.listener(dominantColorListener(onDominantColor))
+                    requestBuilder
+                        .override(PREVIEW_WIDTH_PX, PREVIEW_HEIGHT_PX)
+                        .listener(dominantColorListener(onDominantColor))
                 }
             } else {
                 Icon(

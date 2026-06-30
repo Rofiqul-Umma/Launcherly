@@ -50,3 +50,32 @@
 # resolves at runtime (used by FavoriteAppsService.getFavoriteApps).
 -keep class com.google.gson.reflect.TypeToken { *; }
 -keep class * extends com.google.gson.reflect.TypeToken
+
+# ---------------------------------------------------------------------------
+# Background settings persisted enums
+#
+# BackgroundSettingsService writes BackgroundType / BackgroundSourceType to
+# SharedPreferences by .name and reads them back with valueOf(). Keep the enum
+# constants so the persisted names still resolve in the minified release build
+# (a renamed constant would make valueOf() throw on previously-saved settings).
+# ---------------------------------------------------------------------------
+-keep enum com.rofiq.launcherly.features.background_settings.model.BackgroundType { *; }
+-keep enum com.rofiq.launcherly.features.background_settings.model.BackgroundSourceType { *; }
+
+# ---------------------------------------------------------------------------
+# Glide
+#
+# LauncherlyGlideModule tunes the bitmap pool / RGB_565 decoding that keeps the
+# background grid from OOM-ing on low-RAM TV boxes.
+#
+# Glide finds the kapt-generated module at runtime via reflection:
+#   Class.forName("com.bumptech.glide.GeneratedAppGlideModuleImpl")
+# In the minified release build R8 was renaming that class, so the lookup failed
+# ("Failed to find GeneratedAppGlideModule") and LauncherlyGlideModule was
+# SILENTLY IGNORED — Glide fell back to ARGB_8888 (2x bitmap memory) and OOM-killed
+# the launcher on low-RAM TVs. Keep the generated class (and our module) by name.
+# ---------------------------------------------------------------------------
+-keep class com.bumptech.glide.GeneratedAppGlideModuleImpl { *; }
+-keep class com.rofiq.launcherly.utils.LauncherlyGlideModule { *; }
+-keep class * extends com.bumptech.glide.module.AppGlideModule { <init>(...); }
+-keep public class * implements com.bumptech.glide.module.GlideModule
